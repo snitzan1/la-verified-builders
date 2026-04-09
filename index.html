@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LA Verified Builders | Vetted Contractors</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
+        .step { display: none; animation: fadeIn 0.4s ease-out forwards; }
+        .step.active { display: block; }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .quiz-card {
+            background-color: white;
+            border: 2px solid #e2e8f0;
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+        .quiz-card:hover {
+            border-color: #3b82f6;
+            background-color: #f0fdfa;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        .gallery-img {
+            cursor: pointer;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .gallery-img:hover {
+            transform: scale(1.03);
+            box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+        }
+        .lightbox {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.92);
+            z-index: 9999;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+        .lightbox.active { display: flex; }
+        .lightbox img, .lightbox video {
+            max-width: 92vw;
+            max-height: 88vh;
+            border-radius: 12px;
+            object-fit: contain;
+        }
+        .lightbox-close {
+            position: absolute;
+            top: 20px;
+            right: 28px;
+            color: white;
+            font-size: 2rem;
+            cursor: pointer;
+            z-index: 10000;
+            width: 44px; height: 44px;
+            display: flex; align-items: center; justify-content: center;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.1);
+        }
+        .lightbox-nav {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            color: white;
+            font-size: 2rem;
+            cursor: pointer;
+            width: 50px; height: 50px;
+            display: flex; align-items: center; justify-content: center;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.1);
+            transition: background 0.2s;
+        }
+        .lightbox-nav:hover { background: rgba(255,255,255,0.25); }
+        .lightbox-prev { left: 16px; }
+        .lightbox-next { right: 16px; }
+        .tab-btn { transition: all 0.2s; }
+        .tab-btn.active-tab {
+            background-color: #2563eb;
+            color: white;
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+        }
+        .gallery-section { display: none; animation: fadeIn 0.4s ease-out forwards; }
+        .gallery-section.active-gallery { display: block; }
+        .video-card {
+            position: relative;
+            overflow: hidden;
+            border-radius: 16px;
+            cursor: pointer;
+        }
+        .video-card video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .video-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(0,0,0,0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s;
+        }
+        .video-card:hover .video-overlay {
+            background: rgba(0,0,0,0.15);
+        }
+    </style>
+</head>
+<body class="text-slate-800 antialiased">
+
+    <nav class="bg-white shadow-sm py-4 relative z-50 border-b border-slate-200">
+        <div class="max-w-6xl mx-auto px-4 flex justify-between items-center">
+            <div class="text-xl md:text-2xl font-black text-slate-900 flex items-center tracking-tight">
+                <i class="fa-solid fa-shield-check text-blue-600 mr-2"></i>
+                LA Verified<span class="text-blue-600">Builders</span>
+            </div>
+            <div class="hidden sm:flex text-sm font-bold text-slate-600 items-center bg-green-50 text-green-700 px-3 py-1.5 rounded-full border border-green-200">
+                <i class="fa-solid fa-check-double mr-2"></i> 100% Free Matching Service
+            </div>
+        </div>
+    </nav>
+
+    <section class="relative bg-[#0f172a] pt-16 pb-48 md:pt-24 md:pb-56">
+        <div class="absolute inset-0 overflow-hidden">
+            <img src="edu/adu-3.jpeg" alt="Modern Home with Pool - LA Verified Builders" class="w-full h-full object-cover opacity-25">
+            <div class="absolute inset-0 bg-gradient-to-b from-[#0f172a]/80 to-[#0f172a]"></div>
+        </div>
+
+        <div class="relative z-10 max-w-6xl mx-auto px-4 flex flex-col items-center text-center md:items-start md:text-left">
+            <div class="max-w-3xl">
+                <span class="inline-block border border-blue-500/50 bg-blue-900/30 text-blue-100 text-xs md:text-sm font-bold uppercase tracking-widest py-1.5 px-5 rounded-full mb-6 backdrop-blur-sm">
+                    Los Angeles & Orange County
+                </span>
+
+                <h1 class="text-4xl md:text-5xl lg:text-6xl font-black text-white leading-tight mb-6 tracking-tight">
+                    Find a <span class="text-[#60a5fa]">Pre-Vetted</span><br class="hidden md:block"> Contractor You Can<br class="hidden md:block"> Actually Trust.
+                </h1>
+
+                <p class="text-lg md:text-xl text-slate-300 mb-8 leading-relaxed max-w-2xl font-normal">
+                    Take our 60-second quiz. We'll match your project with elite, fully licensed local experts who have passed our strict quality and background checks.
+                </p>
+
+                <div class="flex flex-col sm:flex-row items-center md:items-start gap-6 font-medium text-lg">
+                    <div class="flex items-center text-white">
+                        <div class="w-6 h-6 rounded-full bg-blue-600 flex items-center justify-center mr-3"><i class="fa-solid fa-check text-white text-xs"></i></div>
+                        License Verified
+                    </div>
+                    <div class="flex items-center text-white">
+                        <div class="w-6 h-6 rounded-full bg-blue-600 flex items-center justify-center mr-3"><i class="fa-solid fa-check text-white text-xs"></i></div>
+                        Reviews Audited
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="max-w-2xl mx-auto px-4 relative z-20 -mt-32 md:-mt-40 mb-20">
+        <div class="bg-white rounded-3xl shadow-2xl p-6 md:p-10 border-t-8 border-blue-600 min-h-[480px] flex flex-col">
+
+            <div class="mb-8 max-w-lg mx-auto w-full">
+                <div class="flex justify-between items-end mb-2">
+                    <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Free Estimate</span>
+                    <span class="text-xs font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded-md" id="progress-text">Step 1 of 8</span>
+                </div>
+                <div class="w-full bg-slate-100 rounded-full h-2">
+                    <div id="progress-bar" class="bg-blue-600 h-2 rounded-full transition-all duration-500" style="width: 12.5%"></div>
+                </div>
+            </div>
+
+            <form id="lead-form" onsubmit="submitForm(event)" class="flex-grow flex flex-col justify-center">
+
+                <div id="step-1" class="step active">
+                    <h2 class="text-2xl md:text-3xl font-extrabold text-slate-900 mb-2 text-center tracking-tight">What type of project do you need?</h2>
+                    <p class="text-slate-500 mb-8 text-center">Select the option that best describes your goal.</p>
+
+                    <div class="space-y-4 max-w-lg mx-auto">
+                        <div class="quiz-card rounded-2xl p-5 flex items-center" onclick="setProjectType('ADU')">
+                            <div class="w-14 h-14 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center text-2xl mr-4"><i class="fa-solid fa-house"></i></div>
+                            <div class="flex-grow">
+                                <span class="font-bold text-lg block text-slate-800">ADU / Garage Conversion</span>
+                            </div>
+                            <i class="fa-solid fa-chevron-right text-slate-300"></i>
+                        </div>
+
+                        <div class="quiz-card rounded-2xl p-5 flex items-center" onclick="setProjectType('Kitchen')">
+                            <div class="w-14 h-14 bg-orange-50 text-orange-500 rounded-2xl flex items-center justify-center text-2xl mr-4"><i class="fa-solid fa-fire-burner"></i></div>
+                            <div class="flex-grow">
+                                <span class="font-bold text-lg block text-slate-800">Kitchen Remodeling</span>
+                            </div>
+                            <i class="fa-solid fa-chevron-right text-slate-300"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="step-2" class="step">
+                    <h2 id="owner-title" class="text-2xl md:text-3xl font-extrabold text-slate-900 mb-8 text-center tracking-tight">Do you own the property?</h2>
+
+                    <div class="grid grid-cols-2 gap-4 max-w-lg mx-auto">
+                        <div class="quiz-card rounded-2xl p-6 text-center" onclick="saveAnswerAndNext('is_owner', 'Yes')">
+                            <div class="w-12 h-12 bg-green-50 text-green-600 rounded-full flex items-center justify-center text-xl mx-auto mb-3"><i class="fa-solid fa-check"></i></div>
+                            <span class="font-bold text-xl block mb-1">Yes</span>
+                            <span class="text-sm text-slate-500">I am the owner</span>
+                        </div>
+                        <div class="quiz-card rounded-2xl p-6 text-center" onclick="saveAnswerAndNext('is_owner', 'No')">
+                            <div class="w-12 h-12 bg-red-50 text-red-500 rounded-full flex items-center justify-center text-xl mx-auto mb-3"><i class="fa-solid fa-xmark"></i></div>
+                            <span class="font-bold text-xl block mb-1">No</span>
+                            <span class="text-sm text-slate-500">I am renting</span>
+                        </div>
+                    </div>
+                    <button type="button" onclick="goBack()" class="mt-8 text-slate-400 hover:text-blue-600 font-semibold w-full text-center transition"><i class="fa-solid fa-arrow-left mr-1"></i> Back</button>
+                </div>
+
+                <div id="step-3" class="step">
+                    <h2 id="location-title" class="text-2xl md:text-3xl font-extrabold text-slate-900 mb-8 text-center tracking-tight">What is the property address (City & ZIP code)?</h2>
+
+                    <div class="max-w-sm mx-auto space-y-4">
+                        <input type="text" id="input_city" placeholder="City (e.g. Los Angeles)" class="w-full text-center text-xl font-medium border-2 border-slate-200 rounded-2xl px-4 py-4 focus:border-blue-600 focus:outline-none bg-slate-50">
+                        <input type="number" id="input_zip" placeholder="ZIP Code (e.g. 90210)" class="w-full text-center text-xl font-medium tracking-widest border-2 border-slate-200 rounded-2xl px-4 py-4 focus:border-blue-600 focus:outline-none bg-slate-50">
+                        <button type="button" onclick="handleLocation()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold text-xl py-4 rounded-2xl shadow-lg transition duration-200 mt-2">
+                            Continue <i class="fa-solid fa-arrow-right ml-2"></i>
+                        </button>
+                    </div>
+                    <button type="button" onclick="goBack()" class="mt-8 text-slate-400 hover:text-blue-600 font-semibold w-full text-center transition"><i class="fa-solid fa-arrow-left mr-1"></i> Back</button>
+                </div>
+
+                <div id="step-4-adu" class="step">
+                    <h2 class="text-2xl md:text-3xl font-extrabold text-slate-900 mb-6 text-center tracking-tight">What type of ADU are you interested in?</h2>
+                    <div class="space-y-3 max-w-lg mx-auto">
+                        <div class="quiz-card rounded-xl p-4 text-center font-bold text-slate-800" onclick="saveAnswerAndNext('specific_type', 'Garage conversion')">Garage conversion</div>
+                        <div class="quiz-card rounded-xl p-4 text-center font-bold text-slate-800" onclick="saveAnswerAndNext('specific_type', 'New detached ADU')">New detached ADU</div>
+                        <div class="quiz-card rounded-xl p-4 text-center font-bold text-slate-800" onclick="saveAnswerAndNext('specific_type', 'Attached ADU')">Attached ADU</div>
+                        <div class="quiz-card rounded-xl p-4 text-center font-bold text-slate-800" onclick="saveAnswerAndNext('specific_type', 'Junior ADU')">Junior ADU</div>
+                        <div class="quiz-card rounded-xl p-4 text-center font-bold text-slate-800 bg-slate-50 border-slate-100 text-slate-500" onclick="saveAnswerAndNext('specific_type', 'Not sure yet')">Not sure yet</div>
+                    </div>
+                    <button type="button" onclick="goBack()" class="mt-6 text-slate-400 hover:text-blue-600 font-semibold w-full text-center transition"><i class="fa-solid fa-arrow-left mr-1"></i> Back</button>
+                </div>
+
+                <div id="step-5-adu" class="step">
+                    <h2 class="text-2xl md:text-3xl font-extrabold text-slate-900 mb-6 text-center tracking-tight">What is your estimated budget for this project?</h2>
+                    <div class="space-y-3 max-w-lg mx-auto">
+                        <div class="quiz-card rounded-xl p-4 text-center font-bold text-slate-800" onclick="saveAnswerAndNext('budget', 'Under $150,000')">Under $150,000</div>
+                        <div class="quiz-card rounded-xl p-4 text-center font-bold text-slate-800" onclick="saveAnswerAndNext('budget', '$150,000 – $250,000')">$150,000 – $250,000</div>
+                        <div class="quiz-card rounded-xl p-4 text-center font-bold text-slate-800" onclick="saveAnswerAndNext('budget', '$250,000 – $400,000')">$250,000 – $400,000</div>
+                        <div class="quiz-card rounded-xl p-4 text-center font-bold text-slate-800" onclick="saveAnswerAndNext('budget', '$400,000+')">$400,000+</div>
+                    </div>
+                    <button type="button" onclick="goBack()" class="mt-6 text-slate-400 hover:text-blue-600 font-semibold w-full text-center transition"><i class="fa-solid fa-arrow-left mr-1"></i> Back</button>
+                </div>
+
+                <div id="step-7-adu" class="step">
+                    <h2 class="text-2xl md:text-3xl font-extrabold text-slate-900 mb-6 text-center tracking-tight">What is the main purpose of your ADU?</h2>
+                    <div class="space-y-3 max-w-lg mx-auto">
+                        <div class="quiz-card rounded-xl p-4 text-center font-bold text-slate-800" onclick="saveAnswerAndNext('priority', 'Rental income')">Rental income</div>
+                        <div class="quiz-card rounded-xl p-4 text-center font-bold text-slate-800" onclick="saveAnswerAndNext('priority', 'Family use')">Family use</div>
+                        <div class="quiz-card rounded-xl p-4 text-center font-bold text-slate-800" onclick="saveAnswerAndNext('priority', 'Guest house')">Guest house</div>
+                        <div class="quiz-card rounded-xl p-4 text-center font-bold text-slate-800" onclick="saveAnswerAndNext('priority', 'Office / personal use')">Office / personal use</div>
+                    </div>
+                    <button type="button" onclick="goBack()" class="mt-6 text-slate-400 hover:text-blue-600 font-semibold w-full text-center transition"><i class="fa-solid fa-arrow-left mr-1"></i> Back</button>
+                </div>
+
+                <div id="step-4-kit" class="step">
+                    <h2 class="text-2xl md:text-3xl font-extrabold text-slate-900 mb-6 text-center tracking-tight">What type of project are you looking for?</h2>
+                    <div class="space-y-3 max-w-lg mx-auto">
+                        <div class="quiz-card rounded-xl p-4 text-center font-bold text-slate-800" onclick="saveAnswerAndNext('specific_type', 'Full kitchen remodel')">Full kitchen remodel</div>
+                        <div class="quiz-card rounded-xl p-4 text-center font-bold text-slate-800" onclick="saveAnswerAndNext('specific_type', 'Partial remodel / update')">Partial remodel / update</div>
+                        <div class="quiz-card rounded-xl p-4 text-center font-bold text-slate-800 bg-slate-50 border-slate-100 text-slate-500" onclick="saveAnswerAndNext('specific_type', 'Just exploring')">Just exploring</div>
+                    </div>
+                    <button type="button" onclick="goBack()" class="mt-6 text-slate-400 hover:text-blue-600 font-semibold w-full text-center transition"><i class="fa-solid fa-arrow-left mr-1"></i> Back</button>
+                </div>
+
+                <div id="step-5-kit" class="step">
+                    <h2 class="text-2xl md:text-3xl font-extrabold text-slate-900 mb-6 text-center tracking-tight">What is your estimated budget for this project?</h2>
+                    <div class="space-y-3 max-w-lg mx-auto">
+                        <div class="quiz-card rounded-xl p-4 text-center font-bold text-slate-800" onclick="saveAnswerAndNext('budget', 'Under $25,000')">Under $25,000</div>
+                        <div class="quiz-card rounded-xl p-4 text-center font-bold text-slate-800" onclick="saveAnswerAndNext('budget', '$25,000 – $50,000')">$25,000 – $50,000</div>
+                        <div class="quiz-card rounded-xl p-4 text-center font-bold text-slate-800" onclick="saveAnswerAndNext('budget', '$50,000 – $75,000')">$50,000 – $75,000</div>
+                        <div class="quiz-card rounded-xl p-4 text-center font-bold text-slate-800" onclick="saveAnswerAndNext('budget', '$75,000+')">$75,000+</div>
+                    </div>
+                    <button type="button" onclick="goBack()" class="mt-6 text-slate-400 hover:text-blue-600 font-semibold w-full text-center transition"><i class="fa-solid fa-arrow-left mr-1"></i> Back</button>
+                </div>
+
+                <div id="step-7-kit" class="step">
+                    <h2 class="text-2xl md:text-3xl font-extrabold text-slate-900 mb-6 text-center tracking-tight">What's most important to you in your new kitchen?</h2>
+                    <div class="space-y-3 max-w-lg mx-auto">
+                        <div class="quiz-card rounded-xl p-4 text-center font-bold text-slate-800" onclick="saveAnswerAndNext('priority', 'Style / design')">Style / design</div>
+                        <div class="quiz-card rounded-xl p-4 text-center font-bold text-slate-800" onclick="saveAnswerAndNext('priority', 'Storage & functionality')">Storage & functionality</div>
+                        <div class="quiz-card rounded-xl p-4 text-center font-bold text-slate-800" onclick="saveAnswerAndNext('priority', 'Budget')">Budget</div>
+                    </div>
+                    <button type="button" onclick="goBack()" class="mt-6 text-slate-400 hover:text-blue-600 font-semibold w-full text-center transition"><i class="fa-solid fa-arrow-left mr-1"></i> Back</button>
+                </div>
+
+                <div id="step-6" class="step">
+                    <h2 id="timeline-title" class="text-2xl md:text-3xl font-extrabold text-slate-900 mb-6 text-center tracking-tight">When are you planning to start?</h2>
+                    <div class="space-y-3 max-w-lg mx-auto">
+                        <div class="quiz-card rounded-xl p-4 text-center font-bold text-slate-800" onclick="saveAnswerAndNext('timeline', 'ASAP (0–3 months)')">ASAP (0–3 months)</div>
+                        <div class="quiz-card rounded-xl p-4 text-center font-bold text-slate-800" onclick="saveAnswerAndNext('timeline', '3–6 months')">3–6 months</div>
+                        <div class="quiz-card rounded-xl p-4 text-center font-bold text-slate-800 bg-slate-50 border-slate-100 text-slate-500" onclick="saveAnswerAndNext('timeline', 'Just exploring')">Just exploring</div>
+                    </div>
+                    <button type="button" onclick="goBack()" class="mt-6 text-slate-400 hover:text-blue-600 font-semibold w-full text-center transition"><i class="fa-solid fa-arrow-left mr-1"></i> Back</button>
+                </div>
+
+                <div id="step-8" class="step">
+                    <div class="text-center mb-6">
+                        <div class="inline-flex items-center justify-center w-16 h-16 bg-green-100 text-green-600 rounded-full mb-3 shadow-sm">
+                            <i class="fa-solid fa-check text-3xl"></i>
+                        </div>
+                        <h2 id="contact-title" class="text-2xl md:text-3xl font-extrabold text-slate-900 tracking-tight">Please provide your contact details:</h2>
+                        <p class="text-slate-500 mt-1">So the verified pro can reach out with an estimate.</p>
+                    </div>
+
+                    <div class="max-w-md mx-auto space-y-4">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Full Name</label>
+                            <input type="text" id="fname" required placeholder="John Doe" class="w-full border-2 border-slate-200 rounded-xl px-4 py-3 focus:border-blue-600 focus:outline-none bg-slate-50 font-medium">
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Phone Number</label>
+                                <input type="tel" id="phone" required placeholder="(310) 555-0199" class="w-full border-2 border-slate-200 rounded-xl px-4 py-3 focus:border-blue-600 focus:outline-none bg-slate-50 font-medium">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Email Address</label>
+                                <input type="email" id="email" required placeholder="john@email.com" class="w-full border-2 border-slate-200 rounded-xl px-4 py-3 focus:border-blue-600 focus:outline-none bg-slate-50 font-medium">
+                            </div>
+                        </div>
+
+                        <button type="submit" id="submit-btn" class="w-full bg-orange-500 hover:bg-orange-600 text-white font-extrabold text-xl py-4 rounded-xl shadow-lg transition duration-200 mt-4">
+                            Get My Free Estimate
+                        </button>
+                        <p class="text-xs text-center text-slate-400 mt-2 font-medium">
+                            <i class="fa-solid fa-lock mr-1"></i> Your information is safe and 100% secure.
+                        </p>
+                    </div>
+                    <button type="button" onclick="goBack()" class="mt-6 text-slate-400 hover:text-blue-600 font-semibold w-full text-center transition"><i class="fa-solid fa-arrow-left mr-1"></i> Back</button>
+                </div>
+
+                <input type="hidden" id="ans_project_type" value="">
+                <input type="hidden" id="ans_is_owner" value="">
+                <input type="hidden" id="ans_city" value="">
+                <input type="hidden" id="ans_zip" value="">
+                <input type="hidden" id="ans_specific_type" value="">
+                <input type="hidden" id="ans_budget" value="">
+                <input type="hidden" id="ans_timeline" value="">
+                <input type="hidden" id="ans_priority" value="">
+
+            </form>
+        </div>
+    </div>
+
+    <section class="py-12 bg-white border-b border-slate-200">
+        <div class="max-w-6xl mx-auto px-4 text-center">
+            <h2 class="text-2xl font-bold text-slate-900 mb-10 tracking-tight">Our Strict Vetting Process</h2>
+            <div class="grid md:grid-cols-3 gap-8">
+                <div class="p-6 rounded-2xl bg-slate-50 border border-slate-100">
+                    <div class="w-14 h-14 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-xl mx-auto mb-4"><i class="fa-solid fa-id-card"></i></div>
+                    <h3 class="font-bold text-lg mb-2 text-slate-900">1. License & Insurance</h3>
+                    <p class="text-sm text-slate-500">Active CSLB license verification & full liability coverage required.</p>
+                </div>
+                <div class="p-6 rounded-2xl bg-slate-50 border border-slate-100">
+                    <div class="w-14 h-14 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-xl mx-auto mb-4"><i class="fa-solid fa-magnifying-glass-chart"></i></div>
+                    <h3 class="font-bold text-lg mb-2 text-slate-900">2. Quality Inspected</h3>
+                    <p class="text-sm text-slate-500">We analyze past projects to ensure high-end craftsmanship.</p>
+                </div>
+                <div class="p-6 rounded-2xl bg-slate-50 border border-slate-100">
+                    <div class="w-14 h-14 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-xl mx-auto mb-4"><i class="fa-solid fa-star"></i></div>
+                    <h3 class="font-bold text-lg mb-2 text-slate-900">3. Top Ratings Only</h3>
+                    <p class="text-sm text-slate-500">Contractors must maintain consistently high reviews to stay in the network.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== FEATURED PROJECTS - REAL IMAGES ===== -->
+    <section class="py-20 bg-slate-50">
+        <div class="max-w-6xl mx-auto px-4">
+            <div class="text-center mb-16">
+                <span class="text-blue-600 font-bold tracking-widest uppercase text-sm mb-3 block">QUALITY GUARANTEED</span>
+                <h2 class="text-3xl md:text-4xl lg:text-5xl font-extrabold text-slate-900 mb-6 tracking-tight">Featured Projects by Our Platinum Partners</h2>
+                <p class="text-lg text-slate-500 max-w-2xl mx-auto">When you use our matching service, you get connected with local experts capable of delivering stunning results like these.</p>
+            </div>
+
+            <div class="grid md:grid-cols-3 gap-8">
+                <!-- ADU Project 1 -->
+                <div class="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition duration-300 border border-slate-200 group">
+                    <div class="h-64 overflow-hidden relative">
+                        <img src="edu/adu-1.jpeg" alt="Modern ADU Build" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
+                        <div class="absolute top-4 left-4 bg-slate-900/90 backdrop-blur text-white text-xs font-bold px-3 py-1.5 rounded-full">
+                            <i class="fa-solid fa-location-dot text-blue-400 mr-1"></i> Los Angeles, CA
+                        </div>
+                    </div>
+                    <div class="p-6">
+                        <h3 class="text-xl font-bold text-slate-900 mb-2">Modern ADU Build</h3>
+                        <p class="text-slate-500 text-sm mb-4">Contemporary two-story ADU with sleek finishes, large windows, and open floor plan living space.</p>
+                        <div class="text-xs font-bold text-blue-800 bg-blue-50 inline-block px-3 py-1.5 rounded-lg border border-blue-100"><i class="fa-solid fa-shield-check mr-1 text-blue-600"></i> Verified Pro: Pacific Ocean Builders</div>
+                    </div>
+                </div>
+
+                <!-- Kitchen Project -->
+                <div class="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition duration-300 border border-slate-200 group">
+                    <div class="h-64 overflow-hidden relative">
+                        <img src="Kitchen/kitchen-3.jpeg" alt="Kitchen Remodel with Island" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
+                        <div class="absolute top-4 left-4 bg-slate-900/90 backdrop-blur text-white text-xs font-bold px-3 py-1.5 rounded-full">
+                            <i class="fa-solid fa-location-dot text-blue-400 mr-1"></i> Santa Monica, CA
+                        </div>
+                    </div>
+                    <div class="p-6">
+                        <h3 class="text-xl font-bold text-slate-900 mb-2">High-End Kitchen Remodel</h3>
+                        <p class="text-slate-500 text-sm mb-4">Full gut renovation featuring custom cabinetry, quartz island, and panoramic views through oversized windows.</p>
+                        <div class="text-xs font-bold text-blue-800 bg-blue-50 inline-block px-3 py-1.5 rounded-lg border border-blue-100"><i class="fa-solid fa-shield-check mr-1 text-blue-600"></i> Verified Pro: Pacific Ocean Builders</div>
+                    </div>
+                </div>
+
+                <!-- ADU Project 2 -->
+                <div class="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition duration-300 border border-slate-200 group md:hidden lg:block">
+                    <div class="h-64 overflow-hidden relative">
+                        <img src="edu/adu-5.jpeg" alt="Detached ADU" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
+                        <div class="absolute top-4 left-4 bg-slate-900/90 backdrop-blur text-white text-xs font-bold px-3 py-1.5 rounded-full">
+                            <i class="fa-solid fa-location-dot text-blue-400 mr-1"></i> Woodland Hills, CA
+                        </div>
+                    </div>
+                    <div class="p-6">
+                        <h3 class="text-xl font-bold text-slate-900 mb-2">Detached ADU with Garden</h3>
+                        <p class="text-slate-500 text-sm mb-4">Single-story detached ADU featuring modern finishes, covered patio, and beautifully landscaped yard.</p>
+                        <div class="text-xs font-bold text-blue-800 bg-blue-50 inline-block px-3 py-1.5 rounded-lg border border-blue-100"><i class="fa-solid fa-shield-check mr-1 text-blue-600"></i> Verified Pro: Pacific Ocean Builders</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== PROJECT GALLERY ===== -->
+    <section class="py-20 bg-white">
+        <div class="max-w-6xl mx-auto px-4">
+            <div class="text-center mb-12">
+                <span class="text-blue-600 font-bold tracking-widest uppercase text-sm mb-3 block">OUR PORTFOLIO</span>
+                <h2 class="text-3xl md:text-4xl lg:text-5xl font-extrabold text-slate-900 mb-6 tracking-tight">Real Projects. Real Results.</h2>
+                <p class="text-lg text-slate-500 max-w-2xl mx-auto mb-10">Browse through actual completed projects by our verified contractors.</p>
+
+                <!-- Tab Buttons -->
+                <div class="inline-flex bg-slate-100 rounded-2xl p-1.5 gap-1">
+                    <button onclick="switchGallery('kitchen')" id="tab-kitchen" class="tab-btn active-tab px-6 py-3 rounded-xl font-bold text-sm transition">
+                        <i class="fa-solid fa-fire-burner mr-2"></i>Kitchen Remodels
+                    </button>
+                    <button onclick="switchGallery('adu')" id="tab-adu" class="tab-btn px-6 py-3 rounded-xl font-bold text-sm text-slate-500 hover:text-slate-800 transition">
+                        <i class="fa-solid fa-house mr-2"></i>ADU / New Builds
+                    </button>
+                </div>
+            </div>
+
+            <!-- Kitchen Gallery -->
+            <div id="gallery-kitchen" class="gallery-section active-gallery">
+                <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                    <div class="col-span-2 row-span-2">
+                        <img src="Kitchen/kitchen-6.jpeg" alt="Kitchen Remodel" class="gallery-img w-full h-full object-cover rounded-2xl shadow-md" style="min-height:320px" onclick="openLightbox('kitchen', 0)">
+                    </div>
+                    <div>
+                        <img src="Kitchen/kitchen-3.jpeg" alt="Kitchen Remodel" class="gallery-img w-full h-48 md:h-56 object-cover rounded-2xl shadow-md" onclick="openLightbox('kitchen', 1)">
+                    </div>
+                    <div>
+                        <img src="Kitchen/kitchen-12.jpeg" alt="Kitchen Remodel" class="gallery-img w-full h-48 md:h-56 object-cover rounded-2xl shadow-md" onclick="openLightbox('kitchen', 2)">
+                    </div>
+                    <div>
+                        <img src="Kitchen/kitchen-9.jpeg" alt="Kitchen Remodel" class="gallery-img w-full h-48 md:h-56 object-cover rounded-2xl shadow-md" onclick="openLightbox('kitchen', 3)">
+                    </div>
+                    <div>
+                        <img src="Kitchen/kitchen-11.jpeg" alt="Kitchen Remodel" class="gallery-img w-full h-48 md:h-56 object-cover rounded-2xl shadow-md" onclick="openLightbox('kitchen', 4)">
+                    </div>
+                    <div>
+                        <img src="Kitchen/kitchen-4.jpeg" alt="Kitchen Remodel" class="gallery-img w-full h-48 md:h-56 object-cover rounded-2xl shadow-md" onclick="openLightbox('kitchen', 5)">
+                    </div>
+                    <div>
+                        <img src="Kitchen/kitchen-5.jpeg" alt="Kitchen Remodel" class="gallery-img w-full h-48 md:h-56 object-cover rounded-2xl shadow-md" onclick="openLightbox('kitchen', 6)">
+                    </div>
+                    <div>
+                        <img src="Kitchen/kitchen-8.jpeg" alt="Kitchen Remodel" class="gallery-img w-full h-48 md:h-56 object-cover rounded-2xl shadow-md" onclick="openLightbox('kitchen', 7)">
+                    </div>
+                    <div>
+                        <img src="Kitchen/kitchen-10.jpeg" alt="Kitchen Remodel" class="gallery-img w-full h-48 md:h-56 object-cover rounded-2xl shadow-md" onclick="openLightbox('kitchen', 8)">
+                    </div>
+                    <div>
+                        <img src="Kitchen/kitchen-1.jpeg" alt="Kitchen Remodel" class="gallery-img w-full h-48 md:h-56 object-cover rounded-2xl shadow-md" onclick="openLightbox('kitchen', 9)">
+                    </div>
+                    <div>
+                        <img src="Kitchen/kitchen-2.jpeg" alt="Kitchen Remodel" class="gallery-img w-full h-48 md:h-56 object-cover rounded-2xl shadow-md" onclick="openLightbox('kitchen', 10)">
+                    </div>
+                    <div>
+                        <img src="Kitchen/kitchen-13.jpeg" alt="Kitchen Remodel" class="gallery-img w-full h-48 md:h-56 object-cover rounded-2xl shadow-md" onclick="openLightbox('kitchen', 11)">
+                    </div>
+                    <div>
+                        <img src="Kitchen/kitchen-14.jpeg" alt="Kitchen Remodel" class="gallery-img w-full h-48 md:h-56 object-cover rounded-2xl shadow-md" onclick="openLightbox('kitchen', 12)">
+                    </div>
+                    <div>
+                        <img src="Kitchen/kitchen-7.jpeg" alt="Kitchen Remodel" class="gallery-img w-full h-48 md:h-56 object-cover rounded-2xl shadow-md" onclick="openLightbox('kitchen', 13)">
+                    </div>
+                </div>
+            </div>
+
+            <!-- ADU Gallery -->
+            <div id="gallery-adu" class="gallery-section">
+                <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+                    <div class="col-span-2 row-span-2">
+                        <img src="edu/adu-3.jpeg" alt="ADU Build" class="gallery-img w-full h-full object-cover rounded-2xl shadow-md" style="min-height:320px" onclick="openLightbox('adu', 0)">
+                    </div>
+                    <div>
+                        <img src="edu/adu-1.jpeg" alt="ADU Build" class="gallery-img w-full h-48 md:h-56 object-cover rounded-2xl shadow-md" onclick="openLightbox('adu', 1)">
+                    </div>
+                    <div>
+                        <img src="edu/adu-5.jpeg" alt="ADU Build" class="gallery-img w-full h-48 md:h-56 object-cover rounded-2xl shadow-md" onclick="openLightbox('adu', 2)">
+                    </div>
+                    <div>
+                        <img src="edu/adu-4.jpeg" alt="ADU Build" class="gallery-img w-full h-48 md:h-56 object-cover rounded-2xl shadow-md" onclick="openLightbox('adu', 3)">
+                    </div>
+                    <div>
+                        <img src="edu/adu-2.jpeg" alt="ADU Interior" class="gallery-img w-full h-48 md:h-56 object-cover rounded-2xl shadow-md" onclick="openLightbox('adu', 4)">
+                    </div>
+                    <!-- Video Card -->
+                    <div class="video-card h-48 md:h-56" onclick="openLightbox('adu', 5)">
+                        <video src="edu/adu-video.mp4" muted class="w-full h-full object-cover rounded-2xl"></video>
+                        <div class="video-overlay rounded-2xl">
+                            <div class="w-16 h-16 bg-white/90 rounded-full flex items-center justify-center shadow-lg">
+                                <i class="fa-solid fa-play text-slate-800 text-xl ml-1"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== CTA BANNER ===== -->
+    <section class="py-16 bg-gradient-to-r from-blue-600 to-blue-800">
+        <div class="max-w-4xl mx-auto px-4 text-center">
+            <h2 class="text-3xl md:text-4xl font-extrabold text-white mb-4 tracking-tight">Ready to Start Your Project?</h2>
+            <p class="text-blue-100 text-lg mb-8 max-w-2xl mx-auto">Take our free 60-second quiz and get matched with a pre-vetted contractor today. No obligation, no cost.</p>
+            <a href="#" onclick="document.querySelector('#step-1').scrollIntoView({behavior:'smooth'}); return false;" class="inline-block bg-orange-500 hover:bg-orange-600 text-white font-extrabold text-xl px-10 py-4 rounded-2xl shadow-lg transition duration-200">
+                Get My Free Estimate <i class="fa-solid fa-arrow-right ml-2"></i>
+            </a>
+        </div>
+    </section>
+
+    <footer class="bg-slate-900 text-slate-400 py-10 text-center text-sm border-t border-slate-800">
+        <div class="max-w-4xl mx-auto px-4">
+            <div class="text-xl font-black text-white flex justify-center items-center mb-4">
+                <i class="fa-solid fa-shield-check text-blue-500 mr-2"></i> LA Verified Builders
+            </div>
+            <p>&copy; 2025 LA Verified Builders. 100% Free 3rd-Party Matching Service.</p>
+            <p class="text-xs opacity-60 mt-4 max-w-2xl mx-auto leading-relaxed">
+                Disclaimer: We are an independent matching service and not a licensed contractor. We conduct preliminary background checks, but homeowners should always verify active CSLB licenses and insurance independently before signing contracts.
+            </p>
+        </div>
+    </footer>
+
+    <!-- Lightbox -->
+    <div id="lightbox" class="lightbox" onclick="closeLightbox(event)">
+        <div class="lightbox-close" onclick="closeLightbox(event)"><i class="fa-solid fa-xmark"></i></div>
+        <div class="lightbox-nav lightbox-prev" onclick="event.stopPropagation(); navigateLightbox(-1)"><i class="fa-solid fa-chevron-left"></i></div>
+        <div id="lightbox-content"></div>
+        <div class="lightbox-nav lightbox-next" onclick="event.stopPropagation(); navigateLightbox(1)"><i class="fa-solid fa-chevron-right"></i></div>
+    </div>
+
+    <script>
+        // ===== QUIZ LOGIC =====
+        let currentStepIndex = 0;
+        let flowPath = [];
+
+        const flowADU = ['step-1', 'step-2', 'step-3', 'step-4-adu', 'step-5-adu', 'step-6', 'step-7-adu', 'step-8'];
+        const flowKitchen = ['step-1', 'step-2', 'step-3', 'step-4-kit', 'step-5-kit', 'step-6', 'step-7-kit', 'step-8'];
+
+        flowPath = flowADU;
+        updateProgress();
+
+        function updateProgress() {
+            const total = 8;
+            const pct = ((currentStepIndex + 1) / total) * 100;
+            document.getElementById('progress-bar').style.width = pct + '%';
+            document.getElementById('progress-text').innerText = 'Step ' + (currentStepIndex + 1) + ' of ' + total;
+        }
+
+        function setProjectType(type) {
+            document.getElementById('ans_project_type').value = type;
+
+            if (type === 'ADU') {
+                flowPath = flowADU;
+                document.getElementById('owner-title').innerText = "Do you own the property where you're considering building an ADU?";
+                document.getElementById('timeline-title').innerText = "When are you planning to start the project?";
+                document.getElementById('contact-title').innerText = "Please provide your contact details:";
+            } else {
+                flowPath = flowKitchen;
+                document.getElementById('owner-title').innerText = "Do you own the property where you want the kitchen remodeled?";
+                document.getElementById('timeline-title').innerText = "When are you planning to start?";
+                document.getElementById('contact-title').innerText = "Please provide your contact information:";
+            }
+            moveToNextStep();
+        }
+
+        function saveAnswerAndNext(fieldId, value) {
+            document.getElementById('ans_' + fieldId).value = value;
+            moveToNextStep();
+        }
+
+        function handleLocation() {
+            const city = document.getElementById('input_city').value;
+            const zip = document.getElementById('input_zip').value;
+
+            if (city.trim().length < 2 || zip.trim().length < 5) {
+                alert("Please enter a valid City and ZIP Code.");
+                return;
+            }
+
+            document.getElementById('ans_city').value = city;
+            document.getElementById('ans_zip').value = zip;
+            moveToNextStep();
+        }
+
+        function moveToNextStep() {
+            document.getElementById(flowPath[currentStepIndex]).classList.remove('active');
+            currentStepIndex++;
+            document.getElementById(flowPath[currentStepIndex]).classList.add('active');
+            updateProgress();
+        }
+
+        function goBack() {
+            if (currentStepIndex > 0) {
+                document.getElementById(flowPath[currentStepIndex]).classList.remove('active');
+                currentStepIndex--;
+                document.getElementById(flowPath[currentStepIndex]).classList.add('active');
+                updateProgress();
+            }
+        }
+
+        // ===================================================================
+        // FIREBASE CONFIG — Must match the same config in admin.html
+        // ===================================================================
+        const firebaseConfig = {
+            apiKey: "AIzaSyAWGh45D_iB1UeNbVWPMTPLOlYXwCcyQy0",
+            authDomain: "la-verified-builders.firebaseapp.com",
+            projectId: "la-verified-builders",
+            storageBucket: "la-verified-builders.firebasestorage.app",
+            messagingSenderId: "430056505516",
+            appId: "1:430056505516:web:07ebea9fc4ecc9b9401f09"
+        };
+
+        let db = null;
+        let firebaseReady = false;
+        try {
+            if (firebaseConfig.apiKey !== "YOUR_API_KEY") {
+                firebase.initializeApp(firebaseConfig);
+                db = firebase.firestore();
+                firebaseReady = true;
+            }
+        } catch(e) {
+            console.warn("Firebase not configured. Using localStorage fallback.", e);
+        }
+
+        function submitForm(e) {
+            e.preventDefault();
+            const btn = document.getElementById('submit-btn');
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i> Generating Estimate...';
+
+            const leadData = {
+                project_type: document.getElementById('ans_project_type').value,
+                is_owner: document.getElementById('ans_is_owner').value,
+                city: document.getElementById('ans_city').value,
+                zip: document.getElementById('ans_zip').value,
+                specific_type: document.getElementById('ans_specific_type').value,
+                budget: document.getElementById('ans_budget').value,
+                timeline: document.getElementById('ans_timeline').value,
+                priority: document.getElementById('ans_priority').value,
+                name: document.getElementById('fname').value,
+                phone: document.getElementById('phone').value,
+                email: document.getElementById('email').value,
+                created_at: new Date().toISOString(),
+                status: "new",
+                payment_approved: false,
+                notes: ""
+            };
+
+            function onSuccess() {
+                btn.innerHTML = '<i class="fa-solid fa-check mr-2"></i> Match Found!';
+                btn.classList.remove('bg-orange-500', 'hover:bg-orange-600');
+                btn.classList.add('bg-green-600', 'hover:bg-green-700');
+            }
+
+            if (firebaseReady) {
+                db.collection('leads').add(leadData)
+                    .then(() => { onSuccess(); })
+                    .catch(err => {
+                        console.error("Firebase save error:", err);
+                        saveToLocalStorage(leadData);
+                        onSuccess();
+                    });
+            } else {
+                saveToLocalStorage(leadData);
+                setTimeout(onSuccess, 800);
+            }
+        }
+
+        function saveToLocalStorage(leadData) {
+            leadData.id = 'lead_' + Date.now();
+            const leads = JSON.parse(localStorage.getItem('la_verified_leads') || '[]');
+            leads.unshift(leadData);
+            localStorage.setItem('la_verified_leads', JSON.stringify(leads));
+        }
+
+        // ===== GALLERY TABS =====
+        function switchGallery(tab) {
+            document.querySelectorAll('.gallery-section').forEach(s => s.classList.remove('active-gallery'));
+            document.querySelectorAll('.tab-btn').forEach(b => { b.classList.remove('active-tab'); b.classList.add('text-slate-500'); });
+
+            document.getElementById('gallery-' + tab).classList.add('active-gallery');
+            const activeBtn = document.getElementById('tab-' + tab);
+            activeBtn.classList.add('active-tab');
+            activeBtn.classList.remove('text-slate-500');
+        }
+
+        // ===== LIGHTBOX =====
+        const galleryImages = {
+            kitchen: [
+                'Kitchen/kitchen-6.jpeg', 'Kitchen/kitchen-3.jpeg', 'Kitchen/kitchen-12.jpeg',
+                'Kitchen/kitchen-9.jpeg', 'Kitchen/kitchen-11.jpeg', 'Kitchen/kitchen-4.jpeg',
+                'Kitchen/kitchen-5.jpeg', 'Kitchen/kitchen-8.jpeg', 'Kitchen/kitchen-10.jpeg',
+                'Kitchen/kitchen-1.jpeg', 'Kitchen/kitchen-2.jpeg', 'Kitchen/kitchen-13.jpeg',
+                'Kitchen/kitchen-14.jpeg', 'Kitchen/kitchen-7.jpeg'
+            ],
+            adu: [
+                'edu/adu-3.jpeg', 'edu/adu-1.jpeg', 'edu/adu-5.jpeg',
+                'edu/adu-4.jpeg', 'edu/adu-2.jpeg', 'edu/adu-video.mp4'
+            ]
+        };
+
+        let currentGallery = 'kitchen';
+        let currentImageIndex = 0;
+
+        function openLightbox(gallery, index) {
+            currentGallery = gallery;
+            currentImageIndex = index;
+            renderLightbox();
+            document.getElementById('lightbox').classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function renderLightbox() {
+            const src = galleryImages[currentGallery][currentImageIndex];
+            const container = document.getElementById('lightbox-content');
+            if (src.endsWith('.mp4')) {
+                container.innerHTML = '<video src="' + src + '" controls autoplay style="max-width:92vw;max-height:88vh;border-radius:12px;"></video>';
+            } else {
+                container.innerHTML = '<img src="' + src + '" alt="Project Photo" style="max-width:92vw;max-height:88vh;border-radius:12px;object-fit:contain;">';
+            }
+        }
+
+        function closeLightbox(e) {
+            if (e.target === document.getElementById('lightbox') || e.target.closest('.lightbox-close')) {
+                document.getElementById('lightbox').classList.remove('active');
+                document.body.style.overflow = '';
+                const vid = document.querySelector('#lightbox-content video');
+                if (vid) vid.pause();
+            }
+        }
+
+        function navigateLightbox(dir) {
+            const imgs = galleryImages[currentGallery];
+            currentImageIndex = (currentImageIndex + dir + imgs.length) % imgs.length;
+            renderLightbox();
+        }
+
+        document.addEventListener('keydown', function(e) {
+            if (!document.getElementById('lightbox').classList.contains('active')) return;
+            if (e.key === 'Escape') { document.getElementById('lightbox').classList.remove('active'); document.body.style.overflow = ''; }
+            if (e.key === 'ArrowLeft') navigateLightbox(-1);
+            if (e.key === 'ArrowRight') navigateLightbox(1);
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LA Verified Builders | Admin Panel</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f1f5f9; }
+        .login-container { animation: fadeIn 0.4s ease-out; }
+        .admin-container { animation: fadeIn 0.4s ease-out; }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .status-new { background: #dbeafe; color: #1e40af; }
+        .status-in_progress { background: #fef3c7; color: #92400e; }
+        .status-handled { background: #d1fae5; color: #065f46; }
+        .payment-approved { background: #d1fae5; color: #065f46; border-color: #6ee7b7; }
+        .payment-not { background: #fee2e2; color: #991b1b; border-color: #fca5a5; }
+        .lead-row { transition: all 0.15s ease; }
+        .lead-row:hover { background-color: #f8fafc; }
+        .notes-input {
+            transition: border-color 0.2s;
+        }
+        .notes-input:focus {
+            border-color: #3b82f6;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+        .filter-btn { transition: all 0.15s; }
+        .filter-btn.active { background: #2563eb; color: white; }
+        .saving-indicator {
+            animation: pulse 1s ease-in-out infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ===== LOGIN SCREEN ===== -->
+    <div id="login-screen" class="min-h-screen flex items-center justify-center px-4">
+        <div class="login-container bg-white rounded-3xl shadow-2xl p-8 md:p-12 w-full max-w-md border-t-8 border-blue-600">
+            <div class="text-center mb-8">
+                <div class="inline-flex items-center justify-center w-16 h-16 bg-blue-100 text-blue-600 rounded-full mb-4">
+                    <i class="fa-solid fa-shield-check text-3xl"></i>
+                </div>
+                <h1 class="text-2xl font-extrabold text-slate-900">LA Verified Builders</h1>
+                <p class="text-slate-500 mt-1">Admin Panel</p>
+            </div>
+
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Username</label>
+                    <input type="text" id="login-user" placeholder="Enter username"
+                        class="w-full border-2 border-slate-200 rounded-xl px-4 py-3 focus:border-blue-600 focus:outline-none bg-slate-50 font-medium text-left" dir="ltr">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Password</label>
+                    <input type="password" id="login-pass" placeholder="Enter password"
+                        class="w-full border-2 border-slate-200 rounded-xl px-4 py-3 focus:border-blue-600 focus:outline-none bg-slate-50 font-medium text-left" dir="ltr"
+                        onkeydown="if(event.key==='Enter') doLogin()">
+                </div>
+                <div id="login-error" class="text-red-500 text-sm font-bold text-center hidden">
+                    <i class="fa-solid fa-circle-exclamation mr-1"></i> Username or password incorrect
+                </div>
+                <button onclick="doLogin()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-lg py-4 rounded-xl shadow-lg transition duration-200 mt-2">
+                    Login <i class="fa-solid fa-arrow-left mr-2"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== ADMIN PANEL ===== -->
+    <div id="admin-screen" class="hidden">
+
+        <!-- Top Nav -->
+        <nav class="bg-white shadow-sm py-4 border-b border-slate-200 sticky top-0 z-50">
+            <div class="max-w-7xl mx-auto px-4 flex justify-between items-center">
+                <div class="flex items-center gap-4">
+                    <div class="text-xl font-black text-slate-900 flex items-center tracking-tight">
+                        <i class="fa-solid fa-shield-check text-blue-600 ml-2"></i>
+                        LA Verified<span class="text-blue-600">Builders</span>
+                    </div>
+                    <span class="bg-blue-50 text-blue-700 text-xs font-bold px-3 py-1 rounded-full border border-blue-200">Admin</span>
+                </div>
+                <div class="flex items-center gap-3">
+                    <span id="admin-username" class="text-sm font-bold text-slate-500 hidden sm:block"></span>
+                    <button onclick="doLogout()" class="text-sm font-bold text-red-500 hover:text-red-700 bg-red-50 px-4 py-2 rounded-xl border border-red-200 transition">
+                        <i class="fa-solid fa-right-from-bracket ml-1"></i> Logout
+                    </button>
+                </div>
+            </div>
+        </nav>
+
+        <div class="max-w-7xl mx-auto px-4 py-8">
+
+            <!-- Stats Bar -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+                <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-xs font-bold text-slate-400 uppercase">Total Leads</p>
+                            <p id="stat-total" class="text-3xl font-black text-slate-900 mt-1">0</p>
+                        </div>
+                        <div class="w-12 h-12 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center">
+                            <i class="fa-solid fa-users text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-xs font-bold text-slate-400 uppercase">New Leads</p>
+                            <p id="stat-new" class="text-3xl font-black text-blue-600 mt-1">0</p>
+                        </div>
+                        <div class="w-12 h-12 bg-orange-50 text-orange-500 rounded-xl flex items-center justify-center">
+                            <i class="fa-solid fa-bell text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-xs font-bold text-slate-400 uppercase">Handled</p>
+                            <p id="stat-handled" class="text-3xl font-black text-green-600 mt-1">0</p>
+                        </div>
+                        <div class="w-12 h-12 bg-green-50 text-green-600 rounded-xl flex items-center justify-center">
+                            <i class="fa-solid fa-check-double text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-xs font-bold text-slate-400 uppercase">Payment Approved</p>
+                            <p id="stat-approved" class="text-3xl font-black text-emerald-600 mt-1">0</p>
+                        </div>
+                        <div class="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center">
+                            <i class="fa-solid fa-circle-dollar-to-slot text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Filters -->
+            <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-200 mb-6">
+                <div class="flex flex-wrap gap-3 items-center">
+                    <span class="text-xs font-bold text-slate-400 uppercase ml-2">Filter:</span>
+
+                    <div class="flex gap-1 bg-slate-100 rounded-xl p-1">
+                        <button onclick="setFilter('type', 'all')" class="filter-btn active text-xs font-bold px-3 py-2 rounded-lg" data-group="type">All</button>
+                        <button onclick="setFilter('type', 'ADU')" class="filter-btn text-xs font-bold px-3 py-2 rounded-lg text-slate-500" data-group="type">ADU</button>
+                        <button onclick="setFilter('type', 'Kitchen')" class="filter-btn text-xs font-bold px-3 py-2 rounded-lg text-slate-500" data-group="type">Kitchen</button>
+                    </div>
+
+                    <div class="flex gap-1 bg-slate-100 rounded-xl p-1">
+                        <button onclick="setFilter('status', 'all')" class="filter-btn active text-xs font-bold px-3 py-2 rounded-lg" data-group="status">All Status</button>
+                        <button onclick="setFilter('status', 'new')" class="filter-btn text-xs font-bold px-3 py-2 rounded-lg text-slate-500" data-group="status">New</button>
+                        <button onclick="setFilter('status', 'in_progress')" class="filter-btn text-xs font-bold px-3 py-2 rounded-lg text-slate-500" data-group="status">In Progress</button>
+                        <button onclick="setFilter('status', 'handled')" class="filter-btn text-xs font-bold px-3 py-2 rounded-lg text-slate-500" data-group="status">Handled</button>
+                    </div>
+
+                    <div class="flex gap-1 bg-slate-100 rounded-xl p-1">
+                        <button onclick="setFilter('payment', 'all')" class="filter-btn active text-xs font-bold px-3 py-2 rounded-lg" data-group="payment">All Payment</button>
+                        <button onclick="setFilter('payment', 'approved')" class="filter-btn text-xs font-bold px-3 py-2 rounded-lg text-slate-500" data-group="payment">Approved</button>
+                        <button onclick="setFilter('payment', 'not')" class="filter-btn text-xs font-bold px-3 py-2 rounded-lg text-slate-500" data-group="payment">Not Approved</button>
+                    </div>
+
+                    <div class="mr-auto">
+                        <span id="saving-status" class="text-xs font-bold text-green-600 hidden">
+                            <i class="fa-solid fa-check ml-1"></i> Saved
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Leads Table -->
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm">
+                        <thead>
+                            <tr class="bg-slate-50 border-b border-slate-200">
+                                <th class="text-right px-4 py-3 font-bold text-slate-500 text-xs uppercase">Date</th>
+                                <th class="text-right px-4 py-3 font-bold text-slate-500 text-xs uppercase">Type</th>
+                                <th class="text-right px-4 py-3 font-bold text-slate-500 text-xs uppercase">Name</th>
+                                <th class="text-right px-4 py-3 font-bold text-slate-500 text-xs uppercase">Phone</th>
+                                <th class="text-right px-4 py-3 font-bold text-slate-500 text-xs uppercase">Email</th>
+                                <th class="text-right px-4 py-3 font-bold text-slate-500 text-xs uppercase">City</th>
+                                <th class="text-right px-4 py-3 font-bold text-slate-500 text-xs uppercase">Details</th>
+                                <th class="text-right px-4 py-3 font-bold text-slate-500 text-xs uppercase">Status</th>
+                                <th class="text-right px-4 py-3 font-bold text-slate-500 text-xs uppercase">Payment</th>
+                                <th class="text-right px-4 py-3 font-bold text-slate-500 text-xs uppercase min-w-[300px]">Notes</th>
+                            </tr>
+                        </thead>
+                        <tbody id="leads-tbody">
+                            <!-- Leads will be rendered here -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Empty State -->
+                <div id="empty-state" class="hidden py-16 text-center">
+                    <div class="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fa-solid fa-inbox text-slate-300 text-2xl"></i>
+                    </div>
+                    <p class="text-slate-400 font-bold">No leads found</p>
+                    <p class="text-slate-300 text-sm mt-1">Leads from the landing page will appear here</p>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Notes Popup -->
+    <div id="notes-modal" class="fixed inset-0 bg-black/50 z-[9998] hidden items-center justify-center px-4" onclick="if(event.target===this) closeNotes()">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6" dir="auto">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-extrabold text-slate-900"><i class="fa-solid fa-pen-to-square text-blue-600 ml-2"></i> Notes</h3>
+                <button onclick="closeNotes()" class="w-9 h-9 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center transition">
+                    <i class="fa-solid fa-xmark text-slate-400"></i>
+                </button>
+            </div>
+            <p id="notes-lead-name" class="text-sm text-slate-500 mb-3 font-medium"></p>
+            <textarea id="notes-textarea"
+                class="w-full border-2 border-slate-200 rounded-xl px-4 py-3 text-sm bg-slate-50 focus:border-blue-500 focus:outline-none resize-none"
+                rows="4" placeholder="Write your notes here..." dir="auto"></textarea>
+            <div class="flex gap-3 mt-4">
+                <button onclick="saveNotes()" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl transition">
+                    <i class="fa-solid fa-check ml-1"></i> Save
+                </button>
+                <button onclick="closeNotes()" class="px-6 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold py-3 rounded-xl transition">
+                    Cancel
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lead Detail Modal -->
+    <div id="detail-modal" class="fixed inset-0 bg-black/60 z-[9999] hidden items-center justify-center px-4" onclick="if(event.target===this) closeDetail()">
+        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto p-6 md:p-8" dir="ltr">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl font-extrabold text-slate-900">Lead Details</h3>
+                <button onclick="closeDetail()" class="w-10 h-10 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center transition">
+                    <i class="fa-solid fa-xmark text-slate-500"></i>
+                </button>
+            </div>
+            <div id="detail-content" class="space-y-3 text-sm"></div>
+        </div>
+    </div>
+
+    <script>
+        // ===================================================================
+        // FIREBASE CONFIG — Replace with your own Firebase project config
+        // ===================================================================
+        // Instructions:
+        // 1. Go to https://console.firebase.google.com
+        // 2. Create a new project (free)
+        // 3. Go to Project Settings > General > Your apps > Add web app
+        // 4. Copy the firebaseConfig object and paste it below
+        // 5. Go to Firestore Database > Create Database > Start in test mode
+        // ===================================================================
+        const firebaseConfig = {
+            apiKey: "AIzaSyAWGh45D_iB1UeNbVWPMTPLOlYXwCcyQy0",
+            authDomain: "la-verified-builders.firebaseapp.com",
+            projectId: "la-verified-builders",
+            storageBucket: "la-verified-builders.firebasestorage.app",
+            messagingSenderId: "430056505516",
+            appId: "1:430056505516:web:07ebea9fc4ecc9b9401f09"
+        };
+
+        // Initialize Firebase
+        let db = null;
+        let firebaseReady = false;
+
+        try {
+            if (firebaseConfig.apiKey !== "YOUR_API_KEY") {
+                firebase.initializeApp(firebaseConfig);
+                db = firebase.firestore();
+                firebaseReady = true;
+            }
+        } catch(e) {
+            console.warn("Firebase not configured yet. Using demo mode.", e);
+        }
+
+        // ===================================================================
+        // LOGIN CONFIG — Change these credentials
+        // ===================================================================
+        const ADMIN_USER = "admin";
+        const ADMIN_PASS = "LA2025!";
+
+        // ===================================================================
+        // STATE
+        // ===================================================================
+        let allLeads = [];
+        let filters = { type: 'all', status: 'all', payment: 'all' };
+
+        // ===================================================================
+        // LOGIN
+        // ===================================================================
+        function doLogin() {
+            const user = document.getElementById('login-user').value.trim();
+            const pass = document.getElementById('login-pass').value;
+
+            if (user === ADMIN_USER && pass === ADMIN_PASS) {
+                document.getElementById('login-screen').classList.add('hidden');
+                document.getElementById('admin-screen').classList.remove('hidden');
+                document.getElementById('admin-username').textContent = user;
+                sessionStorage.setItem('admin_logged', 'true');
+                loadLeads();
+            } else {
+                document.getElementById('login-error').classList.remove('hidden');
+            }
+        }
+
+        function doLogout() {
+            sessionStorage.removeItem('admin_logged');
+            document.getElementById('admin-screen').classList.add('hidden');
+            document.getElementById('login-screen').classList.remove('hidden');
+            document.getElementById('login-user').value = '';
+            document.getElementById('login-pass').value = '';
+            document.getElementById('login-error').classList.add('hidden');
+        }
+
+        // Auto-login if session exists
+        if (sessionStorage.getItem('admin_logged') === 'true') {
+            document.getElementById('login-screen').classList.add('hidden');
+            document.getElementById('admin-screen').classList.remove('hidden');
+            document.getElementById('admin-username').textContent = ADMIN_USER;
+            setTimeout(loadLeads, 300);
+        }
+
+        // ===================================================================
+        // LOAD LEADS
+        // ===================================================================
+        function loadLeads() {
+            if (firebaseReady) {
+                db.collection('leads').orderBy('created_at', 'desc').onSnapshot(snapshot => {
+                    allLeads = [];
+                    snapshot.forEach(doc => {
+                        allLeads.push({ id: doc.id, ...doc.data() });
+                    });
+                    renderAll();
+                });
+            } else {
+                // Demo mode — load from localStorage
+                allLeads = JSON.parse(localStorage.getItem('la_verified_leads') || '[]');
+                // If no leads exist, seed with demo data
+                if (allLeads.length === 0) {
+                    allLeads = [
+                        { id:'lead_1001', project_type:'Kitchen', is_owner:'Yes', city:'Beverly Hills', zip:'90210', specific_type:'Full kitchen remodel', budget:'$75,000+', timeline:'ASAP (0–3 months)', priority:'Style / design', name:'David Cohen', phone:'(310) 442-8891', email:'david.cohen@gmail.com', created_at:new Date().toISOString(), status:'new', payment_approved:false, notes:'' },
+                        { id:'lead_1002', project_type:'ADU', is_owner:'Yes', city:'Santa Monica', zip:'90401', specific_type:'Garage conversion', budget:'$150,000 – $250,000', timeline:'ASAP (0–3 months)', priority:'Rental income', name:'Sarah Johnson', phone:'(310) 555-7723', email:'sarah.j@outlook.com', created_at:new Date(Date.now()-3600000).toISOString(), status:'new', payment_approved:false, notes:'' },
+                        { id:'lead_1003', project_type:'Kitchen', is_owner:'Yes', city:'Los Angeles', zip:'90036', specific_type:'Partial remodel / update', budget:'$25,000 – $50,000', timeline:'3–6 months', priority:'Storage & functionality', name:'Michael Torres', phone:'(323) 901-4455', email:'mtorres88@yahoo.com', created_at:new Date(Date.now()-86400000).toISOString(), status:'in_progress', payment_approved:false, notes:'Called back, scheduling site visit' },
+                        { id:'lead_1004', project_type:'ADU', is_owner:'Yes', city:'Encino', zip:'91316', specific_type:'New detached ADU', budget:'$250,000 – $400,000', timeline:'ASAP (0–3 months)', priority:'Family use', name:'Rachel Kim', phone:'(818) 332-6190', email:'rachel.kim@icloud.com', created_at:new Date(Date.now()-172800000).toISOString(), status:'handled', payment_approved:true, notes:'Signed contract, project starts May 1' },
+                        { id:'lead_1005', project_type:'Kitchen', is_owner:'Yes', city:'Pasadena', zip:'91101', specific_type:'Full kitchen remodel', budget:'$50,000 – $75,000', timeline:'ASAP (0–3 months)', priority:'Style / design', name:'James Wilson', phone:'(626) 778-2034', email:'jwilson@gmail.com', created_at:new Date(Date.now()-259200000).toISOString(), status:'handled', payment_approved:true, notes:'Deposit received, design phase' },
+                        { id:'lead_1006', project_type:'ADU', is_owner:'Yes', city:'Woodland Hills', zip:'91364', specific_type:'Junior ADU', budget:'Under $150,000', timeline:'Just exploring', priority:'Guest house', name:'Lisa Martinez', phone:'(818) 660-3347', email:'lisa.m@hotmail.com', created_at:new Date(Date.now()-345600000).toISOString(), status:'new', payment_approved:false, notes:'' },
+                        { id:'lead_1007', project_type:'Kitchen', is_owner:'No', city:'Glendale', zip:'91205', specific_type:'Just exploring', budget:'Under $25,000', timeline:'Just exploring', priority:'Budget', name:'Robert Chang', phone:'(818) 245-9981', email:'robchang@gmail.com', created_at:new Date(Date.now()-432000000).toISOString(), status:'in_progress', payment_approved:false, notes:'Not owner - needs landlord approval' }
+                    ];
+                    localStorage.setItem('la_verified_leads', JSON.stringify(allLeads));
+                }
+                renderAll();
+            }
+        }
+
+        // ===================================================================
+        // RENDER
+        // ===================================================================
+        function renderAll() {
+            renderStats();
+            renderTable();
+        }
+
+        function renderStats() {
+            document.getElementById('stat-total').textContent = allLeads.length;
+            document.getElementById('stat-new').textContent = allLeads.filter(l => l.status === 'new').length;
+            document.getElementById('stat-handled').textContent = allLeads.filter(l => l.status === 'handled').length;
+            document.getElementById('stat-approved').textContent = allLeads.filter(l => l.payment_approved === true).length;
+        }
+
+        function getFilteredLeads() {
+            return allLeads.filter(lead => {
+                if (filters.type !== 'all' && lead.project_type !== filters.type) return false;
+                if (filters.status !== 'all' && lead.status !== filters.status) return false;
+                if (filters.payment === 'approved' && lead.payment_approved !== true) return false;
+                if (filters.payment === 'not' && lead.payment_approved === true) return false;
+                return true;
+            });
+        }
+
+        function renderTable() {
+            const tbody = document.getElementById('leads-tbody');
+            const filtered = getFilteredLeads();
+            const empty = document.getElementById('empty-state');
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = '';
+                empty.classList.remove('hidden');
+                empty.style.display = 'block';
+                return;
+            }
+
+            empty.classList.add('hidden');
+            empty.style.display = 'none';
+
+            tbody.innerHTML = filtered.map(lead => {
+                const date = lead.created_at ? formatDate(lead.created_at) : '—';
+                const statusClass = 'status-' + (lead.status || 'new');
+                const statusLabel = { new: 'New', in_progress: 'In Progress', handled: 'Handled' }[lead.status || 'new'];
+                const paymentClass = lead.payment_approved ? 'payment-approved' : 'payment-not';
+                const paymentLabel = lead.payment_approved ? 'Approved' : 'Not Approved';
+                const paymentIcon = lead.payment_approved ? 'fa-circle-check' : 'fa-circle-xmark';
+
+                return `
+                <tr class="lead-row border-b border-slate-100">
+                    <td class="px-4 py-3 text-slate-500 text-xs whitespace-nowrap">${date}</td>
+                    <td class="px-4 py-3">
+                        <span class="inline-block text-xs font-bold px-2 py-1 rounded-lg ${lead.project_type === 'ADU' ? 'bg-blue-50 text-blue-700' : 'bg-orange-50 text-orange-700'}">
+                            ${lead.project_type || '—'}
+                        </span>
+                    </td>
+                    <td class="px-4 py-3 font-bold text-slate-800 whitespace-nowrap">${escHtml(lead.name || '—')}</td>
+                    <td class="px-4 py-3 whitespace-nowrap" dir="ltr">
+                        <a href="tel:${escHtml(lead.phone || '')}" class="text-blue-600 hover:underline font-medium">${escHtml(lead.phone || '—')}</a>
+                    </td>
+                    <td class="px-4 py-3 whitespace-nowrap" dir="ltr">
+                        <a href="mailto:${escHtml(lead.email || '')}" class="text-blue-600 hover:underline">${escHtml(lead.email || '—')}</a>
+                    </td>
+                    <td class="px-4 py-3 text-slate-600 whitespace-nowrap">${escHtml(lead.city || '—')}</td>
+                    <td class="px-4 py-3">
+                        <button onclick="showDetail('${lead.id}')" class="text-xs font-bold text-blue-600 hover:text-blue-800 bg-blue-50 px-3 py-1.5 rounded-lg transition">
+                            <i class="fa-solid fa-eye ml-1"></i> View
+                        </button>
+                    </td>
+                    <td class="px-4 py-3">
+                        <select onchange="updateLead('${lead.id}', 'status', this.value)"
+                            class="${statusClass} text-xs font-bold px-3 py-1.5 rounded-lg border-0 cursor-pointer">
+                            <option value="new" ${lead.status === 'new' ? 'selected' : ''}>New</option>
+                            <option value="in_progress" ${lead.status === 'in_progress' ? 'selected' : ''}>In Progress</option>
+                            <option value="handled" ${lead.status === 'handled' ? 'selected' : ''}>Handled</option>
+                        </select>
+                    </td>
+                    <td class="px-4 py-3">
+                        <button onclick="togglePayment('${lead.id}')"
+                            class="${paymentClass} text-xs font-bold px-3 py-1.5 rounded-lg border-2 cursor-pointer transition hover:opacity-80">
+                            <i class="fa-solid ${paymentIcon} ml-1"></i> ${paymentLabel}
+                        </button>
+                    </td>
+                    <td class="px-4 py-3 min-w-[180px]">
+                        <button onclick="openNotes('${lead.id}')"
+                            class="w-full text-right text-sm px-3 py-2 rounded-lg border-2 border-slate-200 bg-slate-50 hover:border-blue-400 hover:bg-blue-50 transition cursor-pointer truncate max-w-[250px] block ${lead.notes ? 'text-slate-700' : 'text-slate-400'}">
+                            ${lead.notes ? escHtml(lead.notes) : '<i class="fa-solid fa-plus ml-1 text-xs"></i> Add notes...'}
+                        </button>
+                    </td>
+                </tr>`;
+            }).join('');
+        }
+
+        // ===================================================================
+        // ACTIONS
+        // ===================================================================
+        function updateLead(id, field, value) {
+            showSaving();
+            if (firebaseReady) {
+                db.collection('leads').doc(id).update({ [field]: value }).then(() => showSaved());
+            } else {
+                const lead = allLeads.find(l => l.id === id);
+                if (lead) {
+                    lead[field] = value;
+                    localStorage.setItem('la_verified_leads', JSON.stringify(allLeads));
+                    renderAll();
+                    showSaved();
+                }
+            }
+        }
+
+        function togglePayment(id) {
+            const lead = allLeads.find(l => l.id === id);
+            if (lead) {
+                updateLead(id, 'payment_approved', !lead.payment_approved);
+            }
+        }
+
+        // ===================================================================
+        // NOTES POPUP
+        // ===================================================================
+        let currentNotesLeadId = null;
+
+        function openNotes(id) {
+            const lead = allLeads.find(l => l.id === id);
+            if (!lead) return;
+            currentNotesLeadId = id;
+            document.getElementById('notes-textarea').value = lead.notes || '';
+            document.getElementById('notes-lead-name').textContent = lead.name + ' — ' + lead.project_type + ' — ' + lead.city;
+            const modal = document.getElementById('notes-modal');
+            modal.classList.remove('hidden');
+            modal.style.display = 'flex';
+            setTimeout(() => document.getElementById('notes-textarea').focus(), 100);
+        }
+
+        function closeNotes() {
+            const modal = document.getElementById('notes-modal');
+            modal.classList.add('hidden');
+            modal.style.display = 'none';
+            currentNotesLeadId = null;
+        }
+
+        function saveNotes() {
+            if (!currentNotesLeadId) return;
+            const value = document.getElementById('notes-textarea').value;
+            updateLead(currentNotesLeadId, 'notes', value);
+            closeNotes();
+        }
+
+        function showDetail(id) {
+            const lead = allLeads.find(l => l.id === id);
+            if (!lead) return;
+
+            const fields = [
+                ['Project Type', lead.project_type],
+                ['Property Owner', lead.is_owner],
+                ['City', lead.city],
+                ['ZIP Code', lead.zip],
+                ['Specific Type', lead.specific_type],
+                ['Budget', lead.budget],
+                ['Timeline', lead.timeline],
+                ['Priority / Goal', lead.priority],
+                ['Client Name', lead.name],
+                ['Phone', lead.phone],
+                ['Email', lead.email],
+                ['Date', lead.created_at ? formatDate(lead.created_at) : '—'],
+            ];
+
+            document.getElementById('detail-content').innerHTML = fields.map(([label, val]) => `
+                <div class="flex justify-between py-2 border-b border-slate-100">
+                    <span class="font-bold text-slate-500">${label}</span>
+                    <span class="font-medium text-slate-800">${escHtml(val || '—')}</span>
+                </div>
+            `).join('');
+
+            const modal = document.getElementById('detail-modal');
+            modal.classList.remove('hidden');
+            modal.style.display = 'flex';
+        }
+
+        function closeDetail() {
+            const modal = document.getElementById('detail-modal');
+            modal.classList.add('hidden');
+            modal.style.display = 'none';
+        }
+
+        // ===================================================================
+        // FILTERS
+        // ===================================================================
+        function setFilter(group, value) {
+            filters[group] = value;
+
+            // Update active button styling
+            document.querySelectorAll(`.filter-btn[data-group="${group}"]`).forEach(btn => {
+                btn.classList.remove('active');
+                btn.classList.add('text-slate-500');
+            });
+            event.target.classList.add('active');
+            event.target.classList.remove('text-slate-500');
+
+            renderTable();
+        }
+
+        // ===================================================================
+        // HELPERS
+        // ===================================================================
+        function formatDate(timestamp) {
+            let date;
+            if (timestamp && timestamp.toDate) {
+                date = timestamp.toDate();
+            } else if (typeof timestamp === 'string') {
+                date = new Date(timestamp);
+            } else {
+                return '—';
+            }
+            return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+        }
+
+        function escHtml(str) {
+            const div = document.createElement('div');
+            div.textContent = str;
+            return div.innerHTML;
+        }
+
+        function showSaving() {
+            const el = document.getElementById('saving-status');
+            el.innerHTML = '<i class="fa-solid fa-spinner fa-spin ml-1"></i> Saving...';
+            el.classList.remove('hidden', 'text-green-600');
+            el.classList.add('text-blue-600', 'saving-indicator');
+        }
+
+        function showSaved() {
+            const el = document.getElementById('saving-status');
+            el.innerHTML = '<i class="fa-solid fa-check ml-1"></i> Saved';
+            el.classList.remove('text-blue-600', 'saving-indicator');
+            el.classList.add('text-green-600');
+            el.classList.remove('hidden');
+            setTimeout(() => el.classList.add('hidden'), 2000);
+        }
+    </script>
+</body>
+</html>
