@@ -23,6 +23,7 @@
         .status-new { background: #dbeafe; color: #1e40af; }
         .status-in_progress { background: #fef3c7; color: #92400e; }
         .status-handled { background: #d1fae5; color: #065f46; }
+        .status-ng { background: #fde2e2; color: #991b1b; }
         .payment-approved { background: #d1fae5; color: #065f46; border-color: #6ee7b7; }
         .payment-not { background: #fee2e2; color: #991b1b; border-color: #fca5a5; }
         .lead-row { transition: all 0.15s ease; }
@@ -169,6 +170,7 @@
                         <button onclick="setFilter('status', 'new')" class="filter-btn text-xs font-bold px-3 py-2 rounded-lg text-slate-500" data-group="status">New</button>
                         <button onclick="setFilter('status', 'in_progress')" class="filter-btn text-xs font-bold px-3 py-2 rounded-lg text-slate-500" data-group="status">In Progress</button>
                         <button onclick="setFilter('status', 'handled')" class="filter-btn text-xs font-bold px-3 py-2 rounded-lg text-slate-500" data-group="status">Handled</button>
+                        <button onclick="setFilter('status', 'ng')" class="filter-btn text-xs font-bold px-3 py-2 rounded-lg text-slate-500" data-group="status">NG</button>
                     </div>
 
                     <div class="flex gap-1 bg-slate-100 rounded-xl p-1">
@@ -415,7 +417,7 @@
             tbody.innerHTML = filtered.map(lead => {
                 const date = lead.created_at ? formatDate(lead.created_at) : '—';
                 const statusClass = 'status-' + (lead.status || 'new');
-                const statusLabel = { new: 'New', in_progress: 'In Progress', handled: 'Handled' }[lead.status || 'new'];
+                const statusLabel = { new: 'New', in_progress: 'In Progress', handled: 'Handled', ng: 'NG' }[lead.status || 'new'];
                 const paymentClass = lead.payment_approved ? 'payment-approved' : 'payment-not';
                 const paymentLabel = lead.payment_approved ? 'Approved' : 'Not Approved';
                 const paymentIcon = lead.payment_approved ? 'fa-circle-check' : 'fa-circle-xmark';
@@ -447,6 +449,7 @@
                             <option value="new" ${lead.status === 'new' ? 'selected' : ''}>New</option>
                             <option value="in_progress" ${lead.status === 'in_progress' ? 'selected' : ''}>In Progress</option>
                             <option value="handled" ${lead.status === 'handled' ? 'selected' : ''}>Handled</option>
+                            <option value="ng" ${lead.status === 'ng' ? 'selected' : ''}>NG</option>
                         </select>
                     </td>
                     <td class="px-4 py-3">
