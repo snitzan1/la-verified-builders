@@ -4,6 +4,24 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>LA Verified Builders | Vetted Contractors</title>
+
+    <!-- Meta Pixel Code -->
+    <script>
+    !function(f,b,e,v,n,t,s)
+    {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+    n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+    if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+    n.queue=[];t=b.createElement(e);t.async=!0;
+    t.src=v;s=b.getElementsByTagName(e)[0];
+    s.parentNode.insertBefore(t,s)}(window, document,'script',
+    'https://connect.facebook.net/en_US/fbevents.js');
+    fbq('init', '1656651418864566');
+    fbq('track', 'PageView');
+    </script>
+    <noscript><img height="1" width="1" style="display:none"
+    src="https://www.facebook.com/tr?id=1656651418864566&ev=PageView&noscript=1"
+    /></noscript>
+    <!-- End Meta Pixel Code -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -117,6 +135,35 @@
         .video-card:hover .video-overlay {
             background: rgba(0,0,0,0.15);
         }
+        .quiz-box-highlight {
+            box-shadow: 0 25px 50px -12px rgba(37, 99, 235, 0.35), 0 0 0 0 rgba(37, 99, 235, 0);
+            animation: quizGlow 2.8s ease-in-out infinite;
+        }
+        @keyframes quizGlow {
+            0%, 100% {
+                box-shadow: 0 25px 50px -12px rgba(37, 99, 235, 0.28), 0 0 0 0 rgba(37, 99, 235, 0);
+            }
+            50% {
+                box-shadow: 0 30px 60px -15px rgba(37, 99, 235, 0.45), 0 0 0 10px rgba(37, 99, 235, 0.09);
+            }
+        }
+        .attention-badge {
+            position: absolute;
+            top: -14px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(135deg, #f97316, #ea580c);
+            color: white;
+            font-size: 0.72rem;
+            font-weight: 800;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            padding: 6px 18px;
+            border-radius: 9999px;
+            box-shadow: 0 8px 20px -4px rgba(234, 88, 12, 0.5);
+            white-space: nowrap;
+            z-index: 30;
+        }
     </style>
 </head>
 <body class="text-slate-800 antialiased">
@@ -133,7 +180,7 @@
         </div>
     </nav>
 
-    <section class="relative bg-[#0f172a] pt-16 pb-48 md:pt-24 md:pb-56">
+    <section class="relative bg-[#0f172a] pt-10 pb-40 md:pt-24 md:pb-56">
         <div class="absolute inset-0 overflow-hidden">
             <img src="edu/adu-3.jpeg" alt="Modern Home with Pool - LA Verified Builders" class="w-full h-full object-cover opacity-25">
             <div class="absolute inset-0 bg-gradient-to-b from-[#0f172a]/80 to-[#0f172a]"></div>
@@ -149,7 +196,7 @@
                     Find a <span class="text-[#60a5fa]">Pre-Vetted</span><br class="hidden md:block"> Contractor You Can<br class="hidden md:block"> Actually Trust.
                 </h1>
 
-                <p class="text-lg md:text-xl text-slate-300 mb-8 leading-relaxed max-w-2xl font-normal">
+                <p class="hidden md:block text-lg md:text-xl text-slate-300 mb-8 leading-relaxed max-w-2xl font-normal">
                     Take our 60-second quiz. We'll match your project with elite, fully licensed local experts who have passed our strict quality and background checks.
                 </p>
 
@@ -167,8 +214,9 @@
         </div>
     </section>
 
-    <div class="max-w-2xl mx-auto px-4 relative z-20 -mt-32 md:-mt-40 mb-20">
-        <div class="bg-white rounded-3xl shadow-2xl p-6 md:p-10 border-t-8 border-blue-600 min-h-[480px] flex flex-col">
+    <div class="max-w-2xl mx-auto px-4 relative z-20 -mt-28 md:-mt-40 mb-10 md:mb-20">
+        <div class="relative bg-white rounded-3xl quiz-box-highlight p-6 md:p-10 border-t-8 border-blue-600 min-h-[480px] flex flex-col">
+            <div class="attention-badge"><i class="fa-solid fa-bolt mr-1"></i> Start Here — Free</div>
 
             <div class="mb-8 max-w-lg mx-auto w-full">
                 <div class="flex justify-between items-end mb-2">
@@ -356,7 +404,28 @@
                 <input type="hidden" id="ans_priority" value="">
 
             </form>
+
+            <div id="thank-you" class="step text-center py-6">
+                <div class="inline-flex items-center justify-center w-24 h-24 bg-green-100 text-green-600 rounded-full mb-6 shadow-md">
+                    <i class="fa-solid fa-check text-5xl"></i>
+                </div>
+                <h2 class="text-3xl md:text-4xl font-extrabold text-slate-900 mb-4 tracking-tight">Thank You!</h2>
+                <p class="text-lg text-slate-700 mb-2 font-semibold">We've received your request.</p>
+                <p class="text-base text-slate-500 max-w-md mx-auto leading-relaxed">
+                    A verified contractor from our network will reach out to you shortly with your free estimate.
+                </p>
+                <div class="mt-8 inline-flex items-center text-sm font-bold text-blue-700 bg-blue-50 border border-blue-100 px-5 py-3 rounded-full">
+                    <i class="fa-solid fa-phone mr-2"></i> Expect a call within 24 hours
+                </div>
+                <p class="text-xs text-slate-400 mt-8 font-medium">
+                    <i class="fa-solid fa-shield-halved mr-1"></i> Your information is safe and 100% secure.
+                </p>
+            </div>
         </div>
+
+        <p class="md:hidden text-center text-sm text-slate-500 mt-6 px-2 leading-relaxed">
+            Take our 60-second quiz. We'll match your project with elite, fully licensed local experts who have passed our strict quality and background checks.
+        </p>
     </div>
 
     <section class="py-12 bg-white border-b border-slate-200">
@@ -544,7 +613,7 @@
         <div class="max-w-4xl mx-auto px-4 text-center">
             <h2 class="text-3xl md:text-4xl font-extrabold text-white mb-4 tracking-tight">Ready to Start Your Project?</h2>
             <p class="text-blue-100 text-lg mb-8 max-w-2xl mx-auto">Take our free 60-second quiz and get matched with a pre-vetted contractor today. No obligation, no cost.</p>
-            <a href="#" onclick="document.querySelector('#step-1').scrollIntoView({behavior:'smooth'}); return false;" class="inline-block bg-orange-500 hover:bg-orange-600 text-white font-extrabold text-xl px-10 py-4 rounded-2xl shadow-lg transition duration-200">
+            <a href="#" onclick="if(typeof fbq==='function'){fbq('trackCustom','CTAClicked',{location:'bottom_banner',label:'Get My Free Estimate'});} document.querySelector('#step-1').scrollIntoView({behavior:'smooth'}); return false;" class="inline-block bg-orange-500 hover:bg-orange-600 text-white font-extrabold text-xl px-10 py-4 rounded-2xl shadow-lg transition duration-200">
                 Get My Free Estimate <i class="fa-solid fa-arrow-right ml-2"></i>
             </a>
         </div>
@@ -556,6 +625,11 @@
                 <i class="fa-solid fa-shield-check text-blue-500 mr-2"></i> LA Verified Builders
             </div>
             <p>&copy; 2025 LA Verified Builders. 100% Free 3rd-Party Matching Service.</p>
+            <div class="mt-4 flex justify-center items-center gap-4 text-xs">
+                <a href="https://pacificoceanbuilders.com/privacy-policy" target="_blank" rel="noopener" class="text-slate-300 hover:text-white underline underline-offset-2 transition">
+                    <i class="fa-solid fa-lock mr-1"></i> Privacy Policy
+                </a>
+            </div>
             <p class="text-xs opacity-60 mt-4 max-w-2xl mx-auto leading-relaxed">
                 Disclaimer: We are an independent matching service and not a licensed contractor. We conduct preliminary background checks, but homeowners should always verify active CSLB licenses and insurance independently before signing contracts.
             </p>
@@ -602,11 +676,28 @@
                 document.getElementById('timeline-title').innerText = "When are you planning to start?";
                 document.getElementById('contact-title').innerText = "Please provide your contact information:";
             }
+
+            // Meta Pixel — user started the quiz
+            if (typeof fbq === 'function') {
+                fbq('track', 'InitiateCheckout', { content_category: type });
+                fbq('trackCustom', 'QuizStarted', { project_type: type });
+            }
+
             moveToNextStep();
         }
 
         function saveAnswerAndNext(fieldId, value) {
             document.getElementById('ans_' + fieldId).value = value;
+
+            // Meta Pixel — track each quiz step
+            if (typeof fbq === 'function') {
+                fbq('trackCustom', 'QuizStepCompleted', {
+                    field: fieldId,
+                    value: value,
+                    step: currentStepIndex + 1
+                });
+            }
+
             moveToNextStep();
         }
 
@@ -621,6 +712,12 @@
 
             document.getElementById('ans_city').value = city;
             document.getElementById('ans_zip').value = zip;
+
+            // Meta Pixel — location provided
+            if (typeof fbq === 'function') {
+                fbq('trackCustom', 'LocationProvided', { city: city, zip: zip });
+            }
+
             moveToNextStep();
         }
 
@@ -688,9 +785,29 @@
             };
 
             function onSuccess() {
-                btn.innerHTML = '<i class="fa-solid fa-check mr-2"></i> Match Found!';
-                btn.classList.remove('bg-orange-500', 'hover:bg-orange-600');
-                btn.classList.add('bg-green-600', 'hover:bg-green-700');
+                // Hide the form and progress bar, show the thank-you screen
+                document.getElementById('lead-form').style.display = 'none';
+                const progressEl = document.getElementById('progress-bar');
+                if (progressEl && progressEl.parentElement && progressEl.parentElement.parentElement) {
+                    progressEl.parentElement.parentElement.style.display = 'none';
+                }
+                document.getElementById('thank-you').classList.add('active');
+
+                // Scroll the thank-you card into view so the user sees it
+                document.getElementById('thank-you').scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+                // Meta Pixel — MAIN CONVERSION EVENT
+                if (typeof fbq === 'function') {
+                    fbq('track', 'Lead', {
+                        content_category: leadData.project_type,
+                        content_name: leadData.specific_type,
+                        city: leadData.city,
+                        zip: leadData.zip,
+                        budget: leadData.budget,
+                        timeline: leadData.timeline,
+                        currency: 'USD'
+                    });
+                }
             }
 
             if (firebaseReady) {
@@ -749,6 +866,15 @@
             renderLightbox();
             document.getElementById('lightbox').classList.add('active');
             document.body.style.overflow = 'hidden';
+
+            // Meta Pixel — user engaged with gallery content
+            if (typeof fbq === 'function') {
+                fbq('track', 'ViewContent', {
+                    content_category: gallery === 'adu' ? 'ADU' : 'Kitchen',
+                    content_type: 'project_photo',
+                    content_ids: [gallery + '_' + index]
+                });
+            }
         }
 
         function renderLightbox() {
