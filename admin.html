@@ -4,6 +4,24 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>LA Verified Builders | Admin Panel</title>
+
+    <!-- Meta Pixel Code -->
+    <script>
+    !function(f,b,e,v,n,t,s)
+    {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+    n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+    if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+    n.queue=[];t=b.createElement(e);t.async=!0;
+    t.src=v;s=b.getElementsByTagName(e)[0];
+    s.parentNode.insertBefore(t,s)}(window, document,'script',
+    'https://connect.facebook.net/en_US/fbevents.js');
+    fbq('init', '1656651418864566');
+    fbq('track', 'PageView');
+    </script>
+    <noscript><img height="1" width="1" style="display:none"
+    src="https://www.facebook.com/tr?id=1656651418864566&ev=PageView&noscript=1"
+    /></noscript>
+    <!-- End Meta Pixel Code -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -203,6 +221,7 @@
                                 <th class="text-right px-4 py-3 font-bold text-slate-500 text-xs uppercase">Status</th>
                                 <th class="text-right px-4 py-3 font-bold text-slate-500 text-xs uppercase">Payment</th>
                                 <th class="text-right px-4 py-3 font-bold text-slate-500 text-xs uppercase min-w-[300px]">Notes</th>
+                                <th class="text-right px-4 py-3 font-bold text-slate-500 text-xs uppercase">Delete</th>
                             </tr>
                         </thead>
                         <tbody id="leads-tbody">
@@ -464,6 +483,12 @@
                             ${lead.notes ? escHtml(lead.notes) : '<i class="fa-solid fa-plus ml-1 text-xs"></i> Add notes...'}
                         </button>
                     </td>
+                    <td class="px-4 py-3">
+                        <button onclick="deleteLead('${lead.id}', ${JSON.stringify(lead.name || '').replace(/"/g, '&quot;')})"
+                            class="text-xs font-bold text-red-600 hover:text-white bg-red-50 hover:bg-red-600 px-3 py-1.5 rounded-lg border border-red-200 transition" title="Delete lead">
+                            <i class="fa-solid fa-trash"></i>
+                        </button>
+                    </td>
                 </tr>`;
             }).join('');
         }
@@ -483,6 +508,20 @@
                     renderAll();
                     showSaved();
                 }
+            }
+        }
+
+        function deleteLead(id, name) {
+            if (!confirm('Delete lead "' + (name || id) + '"?\nThis action cannot be undone.')) return;
+            showSaving();
+            if (firebaseReady) {
+                db.collection('leads').doc(id).delete().then(() => showSaved())
+                    .catch(err => { alert('Failed to delete: ' + err.message); });
+            } else {
+                allLeads = allLeads.filter(l => l.id !== id);
+                localStorage.setItem('la_verified_leads', JSON.stringify(allLeads));
+                renderAll();
+                showSaved();
             }
         }
 
