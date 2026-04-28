@@ -277,7 +277,16 @@
                     <div class="max-w-sm mx-auto space-y-4">
                         <input type="text" id="input_city" placeholder="City (e.g. Los Angeles)" class="w-full text-center text-xl font-medium border-2 border-slate-200 rounded-2xl px-4 py-4 focus:border-blue-600 focus:outline-none bg-slate-50">
                         <input type="number" id="input_zip" placeholder="ZIP Code (e.g. 90210)" class="w-full text-center text-xl font-medium tracking-widest border-2 border-slate-200 rounded-2xl px-4 py-4 focus:border-blue-600 focus:outline-none bg-slate-50">
-                        <button type="button" onclick="handleLocation()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold text-xl py-4 rounded-2xl shadow-lg transition duration-200 mt-2">
+                        <div id="zip-error" class="hidden bg-red-50 border-2 border-red-200 rounded-2xl p-4 text-left">
+                            <div class="flex items-start">
+                                <i class="fa-solid fa-circle-exclamation text-red-500 text-xl mr-3 mt-0.5"></i>
+                                <div>
+                                    <p class="font-bold text-red-800 mb-1">We're not serving your area yet</p>
+                                    <p class="text-sm text-red-700 leading-relaxed">Sorry — this ZIP code is outside our current service area. We currently serve select neighborhoods across Los Angeles, Ventura, and Orange County. Please check back as we continue to expand.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <button type="button" id="zip-continue-btn" onclick="handleLocation()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold text-xl py-4 rounded-2xl shadow-lg transition duration-200 mt-2">
                             Continue <i class="fa-solid fa-arrow-right ml-2"></i>
                         </button>
                     </div>
@@ -649,6 +658,18 @@
         let currentStepIndex = 0;
         let flowPath = [];
 
+        const SERVICE_AREA_ZIPS = new Set([
+            '90077','90024','90025','90034','90035','90041','90046','90049','90064','90067',
+            '90068','90069','90028','90027','90045','90095','90263','90272','90290','90291',
+            '90292','90401','90402','90403','90404','90405','90210','90212','90230','90232',
+            '90073','91301','91302','91303','91304','91306','91307','91316','91320','91321',
+            '91324','91325','91330','91343','91350','91351','91354','91355','91356','91360',
+            '91361','91362','91364','91367','91377','91381','91203','91204','91205','91206',
+            '91601','91602','91604','91607','91608','91101','91103','91104','91108','91024',
+            '91030','93012','93021','93064','93065','90301','90302','90305','90245','90254',
+            '90266','90277','90503','90293','90094'
+        ]);
+
         const flowADU = ['step-1', 'step-2', 'step-3', 'step-4-adu', 'step-5-adu', 'step-6', 'step-7-adu', 'step-8'];
         const flowKitchen = ['step-1', 'step-2', 'step-3', 'step-4-kit', 'step-5-kit', 'step-6', 'step-7-kit', 'step-8'];
 
@@ -703,10 +724,25 @@
 
         function handleLocation() {
             const city = document.getElementById('input_city').value;
-            const zip = document.getElementById('input_zip').value;
+            const zip = document.getElementById('input_zip').value.trim();
+            const zipErrorEl = document.getElementById('zip-error');
+            const zipInputEl = document.getElementById('input_zip');
 
-            if (city.trim().length < 2 || zip.trim().length < 5) {
+            zipErrorEl.classList.add('hidden');
+            zipInputEl.classList.remove('border-red-400');
+
+            if (city.trim().length < 2 || zip.length < 5) {
                 alert("Please enter a valid City and ZIP Code.");
+                return;
+            }
+
+            if (!SERVICE_AREA_ZIPS.has(zip)) {
+                zipErrorEl.classList.remove('hidden');
+                zipInputEl.classList.add('border-red-400');
+
+                if (typeof fbq === 'function') {
+                    fbq('trackCustom', 'OutOfServiceArea', { zip: zip, city: city });
+                }
                 return;
             }
 
