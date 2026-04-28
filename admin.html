@@ -39,6 +39,12 @@
             to { opacity: 1; transform: translateY(0); }
         }
         .status-new { background: #dbeafe; color: #1e40af; }
+        .status-answered { background: #cffafe; color: #155e75; }
+        .status-meeting_scheduled { background: #d1fae5; color: #065f46; }
+        .status-no_answer_3x { background: #fef3c7; color: #92400e; }
+        .status-invalid_details { background: #fde2e2; color: #991b1b; }
+        .status-other { background: #e2e8f0; color: #334155; }
+        /* Legacy status compat */
         .status-in_progress { background: #fef3c7; color: #92400e; }
         .status-handled { background: #d1fae5; color: #065f46; }
         .status-ng { background: #fde2e2; color: #991b1b; }
@@ -115,6 +121,9 @@
                 </div>
                 <div class="flex items-center gap-3">
                     <span id="admin-username" class="text-sm font-bold text-slate-500 hidden sm:block"></span>
+                    <button onclick="exportLeads()" class="text-sm font-bold text-green-700 hover:text-green-900 bg-green-50 px-4 py-2 rounded-xl border border-green-200 transition">
+                        <i class="fa-solid fa-file-arrow-down mr-1"></i> Download Report
+                    </button>
                     <button onclick="doLogout()" class="text-sm font-bold text-red-500 hover:text-red-700 bg-red-50 px-4 py-2 rounded-xl border border-red-200 transition">
                         <i class="fa-solid fa-right-from-bracket mr-1"></i> Logout
                     </button>
@@ -151,11 +160,11 @@
                 <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200">
                     <div class="flex items-center justify-between">
                         <div>
-                            <p class="text-xs font-bold text-slate-400 uppercase">Handled</p>
+                            <p class="text-xs font-bold text-slate-400 uppercase">Meetings Scheduled</p>
                             <p id="stat-handled" class="text-3xl font-black text-green-600 mt-1">0</p>
                         </div>
                         <div class="w-12 h-12 bg-green-50 text-green-600 rounded-xl flex items-center justify-center">
-                            <i class="fa-solid fa-check-double text-xl"></i>
+                            <i class="fa-solid fa-calendar-check text-xl"></i>
                         </div>
                     </div>
                 </div>
@@ -183,12 +192,14 @@
                         <button onclick="setFilter('type', 'Kitchen')" class="filter-btn text-xs font-bold px-3 py-2 rounded-lg text-slate-500" data-group="type">Kitchen</button>
                     </div>
 
-                    <div class="flex gap-1 bg-slate-100 rounded-xl p-1">
+                    <div class="flex gap-1 bg-slate-100 rounded-xl p-1 flex-wrap">
                         <button onclick="setFilter('status', 'all')" class="filter-btn active text-xs font-bold px-3 py-2 rounded-lg" data-group="status">All Status</button>
                         <button onclick="setFilter('status', 'new')" class="filter-btn text-xs font-bold px-3 py-2 rounded-lg text-slate-500" data-group="status">New</button>
-                        <button onclick="setFilter('status', 'in_progress')" class="filter-btn text-xs font-bold px-3 py-2 rounded-lg text-slate-500" data-group="status">In Progress</button>
-                        <button onclick="setFilter('status', 'handled')" class="filter-btn text-xs font-bold px-3 py-2 rounded-lg text-slate-500" data-group="status">Handled</button>
-                        <button onclick="setFilter('status', 'ng')" class="filter-btn text-xs font-bold px-3 py-2 rounded-lg text-slate-500" data-group="status">NG</button>
+                        <button onclick="setFilter('status', 'answered')" class="filter-btn text-xs font-bold px-3 py-2 rounded-lg text-slate-500" data-group="status">Answered</button>
+                        <button onclick="setFilter('status', 'meeting_scheduled')" class="filter-btn text-xs font-bold px-3 py-2 rounded-lg text-slate-500" data-group="status">Meeting Scheduled</button>
+                        <button onclick="setFilter('status', 'no_answer_3x')" class="filter-btn text-xs font-bold px-3 py-2 rounded-lg text-slate-500" data-group="status">No Answer (3x)</button>
+                        <button onclick="setFilter('status', 'invalid_details')" class="filter-btn text-xs font-bold px-3 py-2 rounded-lg text-slate-500" data-group="status">Invalid Details</button>
+                        <button onclick="setFilter('status', 'other')" class="filter-btn text-xs font-bold px-3 py-2 rounded-lg text-slate-500" data-group="status">Other</button>
                     </div>
 
                     <div class="flex gap-1 bg-slate-100 rounded-xl p-1">
@@ -326,6 +337,19 @@
         let allLeads = [];
         let filters = { type: 'all', status: 'all', payment: 'all' };
 
+        const STATUS_LABELS = {
+            new: 'New',
+            answered: 'Answered',
+            meeting_scheduled: 'Meeting Scheduled',
+            no_answer_3x: 'No Answer (3x)',
+            invalid_details: 'Invalid Details',
+            other: 'Other',
+            // Legacy mappings — older leads still in the DB
+            in_progress: 'In Progress',
+            handled: 'Handled',
+            ng: 'NG'
+        };
+
         // ===================================================================
         // LOGIN
         // ===================================================================
@@ -379,13 +403,13 @@
                 // If no leads exist, seed with demo data
                 if (allLeads.length === 0) {
                     allLeads = [
-                        { id:'lead_1001', project_type:'Kitchen', is_owner:'Yes', city:'Beverly Hills', zip:'90210', specific_type:'Full kitchen remodel', budget:'$75,000+', timeline:'ASAP (0–3 months)', priority:'Style / design', name:'David Cohen', phone:'(310) 442-8891', email:'david.cohen@gmail.com', created_at:new Date().toISOString(), status:'new', payment_approved:false, notes:'' },
-                        { id:'lead_1002', project_type:'ADU', is_owner:'Yes', city:'Santa Monica', zip:'90401', specific_type:'Garage conversion', budget:'$150,000 – $250,000', timeline:'ASAP (0–3 months)', priority:'Rental income', name:'Sarah Johnson', phone:'(310) 555-7723', email:'sarah.j@outlook.com', created_at:new Date(Date.now()-3600000).toISOString(), status:'new', payment_approved:false, notes:'' },
-                        { id:'lead_1003', project_type:'Kitchen', is_owner:'Yes', city:'Los Angeles', zip:'90036', specific_type:'Partial remodel / update', budget:'$25,000 – $50,000', timeline:'3–6 months', priority:'Storage & functionality', name:'Michael Torres', phone:'(323) 901-4455', email:'mtorres88@yahoo.com', created_at:new Date(Date.now()-86400000).toISOString(), status:'in_progress', payment_approved:false, notes:'Called back, scheduling site visit' },
-                        { id:'lead_1004', project_type:'ADU', is_owner:'Yes', city:'Encino', zip:'91316', specific_type:'New detached ADU', budget:'$250,000 – $400,000', timeline:'ASAP (0–3 months)', priority:'Family use', name:'Rachel Kim', phone:'(818) 332-6190', email:'rachel.kim@icloud.com', created_at:new Date(Date.now()-172800000).toISOString(), status:'handled', payment_approved:true, notes:'Signed contract, project starts May 1' },
-                        { id:'lead_1005', project_type:'Kitchen', is_owner:'Yes', city:'Pasadena', zip:'91101', specific_type:'Full kitchen remodel', budget:'$50,000 – $75,000', timeline:'ASAP (0–3 months)', priority:'Style / design', name:'James Wilson', phone:'(626) 778-2034', email:'jwilson@gmail.com', created_at:new Date(Date.now()-259200000).toISOString(), status:'handled', payment_approved:true, notes:'Deposit received, design phase' },
-                        { id:'lead_1006', project_type:'ADU', is_owner:'Yes', city:'Woodland Hills', zip:'91364', specific_type:'Junior ADU', budget:'Under $150,000', timeline:'Just exploring', priority:'Guest house', name:'Lisa Martinez', phone:'(818) 660-3347', email:'lisa.m@hotmail.com', created_at:new Date(Date.now()-345600000).toISOString(), status:'new', payment_approved:false, notes:'' },
-                        { id:'lead_1007', project_type:'Kitchen', is_owner:'No', city:'Glendale', zip:'91205', specific_type:'Just exploring', budget:'Under $25,000', timeline:'Just exploring', priority:'Budget', name:'Robert Chang', phone:'(818) 245-9981', email:'robchang@gmail.com', created_at:new Date(Date.now()-432000000).toISOString(), status:'in_progress', payment_approved:false, notes:'Not owner - needs landlord approval' }
+                        { id:'lead_1001', project_type:'Kitchen', is_owner:'Yes', city:'Beverly Hills', zip:'90210', specific_type:'Full kitchen remodel', budget:'$75,000+', timeline:'ASAP (0–3 months)', priority:'Style / design', callback_day:'Today', callback_time:'Afternoon (12 – 5 PM)', name:'David Cohen', phone:'(310) 442-8891', email:'david.cohen@gmail.com', customer_message:'Looking to start as soon as possible. Already have ideas from Pinterest.', created_at:new Date().toISOString(), status:'new', payment_approved:false, notes:'' },
+                        { id:'lead_1002', project_type:'ADU', is_owner:'Yes', city:'Santa Monica', zip:'90401', specific_type:'Garage conversion', budget:'$150,000 – $250,000', timeline:'ASAP (0–3 months)', priority:'Rental income', callback_day:'Tomorrow', callback_time:'Morning (8 AM – 12 PM)', name:'Sarah Johnson', phone:'(310) 555-7723', email:'sarah.j@outlook.com', customer_message:'', created_at:new Date(Date.now()-3600000).toISOString(), status:'new', payment_approved:false, notes:'' },
+                        { id:'lead_1003', project_type:'Kitchen', is_owner:'Yes', city:'Los Angeles', zip:'90036', specific_type:'Partial remodel / update', budget:'$25,000 – $50,000', timeline:'3–6 months', priority:'Storage & functionality', callback_day:'Within 2-3 days', callback_time:'Evening (5 – 8 PM)', name:'Michael Torres', phone:'(323) 901-4455', email:'mtorres88@yahoo.com', customer_message:'Mainly need new cabinets and countertops.', created_at:new Date(Date.now()-86400000).toISOString(), status:'answered', payment_approved:false, notes:'Called back, scheduling site visit' },
+                        { id:'lead_1004', project_type:'ADU', is_owner:'Yes', city:'Encino', zip:'91316', specific_type:'New detached ADU', budget:'$250,000 – $400,000', timeline:'ASAP (0–3 months)', priority:'Family use', callback_day:'Today', callback_time:'Anytime', name:'Rachel Kim', phone:'(818) 332-6190', email:'rachel.kim@icloud.com', customer_message:'Need 2-bedroom ADU for elderly parents. Accessibility important.', created_at:new Date(Date.now()-172800000).toISOString(), status:'meeting_scheduled', payment_approved:true, notes:'Signed contract, project starts May 1' },
+                        { id:'lead_1005', project_type:'Kitchen', is_owner:'Yes', city:'Pasadena', zip:'91101', specific_type:'Full kitchen remodel', budget:'$50,000 – $75,000', timeline:'ASAP (0–3 months)', priority:'Style / design', callback_day:'Anytime this week', callback_time:'Afternoon (12 – 5 PM)', name:'James Wilson', phone:'(626) 778-2034', email:'jwilson@gmail.com', customer_message:'', created_at:new Date(Date.now()-259200000).toISOString(), status:'meeting_scheduled', payment_approved:true, notes:'Deposit received, design phase' },
+                        { id:'lead_1006', project_type:'ADU', is_owner:'Yes', city:'Woodland Hills', zip:'91364', specific_type:'Junior ADU', budget:'Under $150,000', timeline:'Just exploring', priority:'Guest house', callback_day:'Tomorrow', callback_time:'Morning (8 AM – 12 PM)', name:'Lisa Martinez', phone:'(818) 660-3347', email:'lisa.m@hotmail.com', customer_message:'', created_at:new Date(Date.now()-345600000).toISOString(), status:'no_answer_3x', payment_approved:false, notes:'Tried 3 times, no answer' },
+                        { id:'lead_1007', project_type:'Kitchen', is_owner:'No', city:'Glendale', zip:'91205', specific_type:'Just exploring', budget:'Under $25,000', timeline:'Just exploring', priority:'Budget', callback_day:'Anytime this week', callback_time:'Anytime', name:'Robert Chang', phone:'(818) 245-9981', email:'robchang@gmail.com', customer_message:'I rent — checking with landlord first.', created_at:new Date(Date.now()-432000000).toISOString(), status:'invalid_details', payment_approved:false, notes:'Not owner - needs landlord approval' }
                     ];
                     localStorage.setItem('la_verified_leads', JSON.stringify(allLeads));
                 }
@@ -403,8 +427,8 @@
 
         function renderStats() {
             document.getElementById('stat-total').textContent = allLeads.length;
-            document.getElementById('stat-new').textContent = allLeads.filter(l => l.status === 'new').length;
-            document.getElementById('stat-handled').textContent = allLeads.filter(l => l.status === 'handled').length;
+            document.getElementById('stat-new').textContent = allLeads.filter(l => l.status === 'new' || !l.status).length;
+            document.getElementById('stat-handled').textContent = allLeads.filter(l => l.status === 'meeting_scheduled' || l.status === 'handled').length;
             document.getElementById('stat-approved').textContent = allLeads.filter(l => l.payment_approved === true).length;
         }
 
@@ -436,7 +460,6 @@
             tbody.innerHTML = filtered.map(lead => {
                 const date = lead.created_at ? formatDate(lead.created_at) : '—';
                 const statusClass = 'status-' + (lead.status || 'new');
-                const statusLabel = { new: 'New', in_progress: 'In Progress', handled: 'Handled', ng: 'NG' }[lead.status || 'new'];
                 const paymentClass = lead.payment_approved ? 'payment-approved' : 'payment-not';
                 const paymentLabel = lead.payment_approved ? 'Approved' : 'Not Approved';
                 const paymentIcon = lead.payment_approved ? 'fa-circle-check' : 'fa-circle-xmark';
@@ -465,10 +488,15 @@
                     <td class="px-4 py-3">
                         <select onchange="updateLead('${lead.id}', 'status', this.value)"
                             class="${statusClass} text-xs font-bold px-3 py-1.5 rounded-lg border-0 cursor-pointer">
-                            <option value="new" ${lead.status === 'new' ? 'selected' : ''}>New</option>
-                            <option value="in_progress" ${lead.status === 'in_progress' ? 'selected' : ''}>In Progress</option>
-                            <option value="handled" ${lead.status === 'handled' ? 'selected' : ''}>Handled</option>
-                            <option value="ng" ${lead.status === 'ng' ? 'selected' : ''}>NG</option>
+                            <option value="new" ${(lead.status === 'new' || !lead.status) ? 'selected' : ''}>New</option>
+                            <option value="answered" ${lead.status === 'answered' ? 'selected' : ''}>Answered</option>
+                            <option value="meeting_scheduled" ${lead.status === 'meeting_scheduled' ? 'selected' : ''}>Meeting Scheduled</option>
+                            <option value="no_answer_3x" ${lead.status === 'no_answer_3x' ? 'selected' : ''}>No Answer (3x)</option>
+                            <option value="invalid_details" ${lead.status === 'invalid_details' ? 'selected' : ''}>Invalid Details</option>
+                            <option value="other" ${lead.status === 'other' ? 'selected' : ''}>Other</option>
+                            ${(lead.status === 'in_progress') ? '<option value="in_progress" selected>In Progress (legacy)</option>' : ''}
+                            ${(lead.status === 'handled') ? '<option value="handled" selected>Handled (legacy)</option>' : ''}
+                            ${(lead.status === 'ng') ? '<option value="ng" selected>NG (legacy)</option>' : ''}
                         </select>
                     </td>
                     <td class="px-4 py-3">
@@ -576,18 +604,31 @@
                 ['Budget', lead.budget],
                 ['Timeline', lead.timeline],
                 ['Priority / Goal', lead.priority],
+                ['Preferred Callback Day', lead.callback_day],
+                ['Preferred Callback Time', lead.callback_time],
                 ['Client Name', lead.name],
                 ['Phone', lead.phone],
                 ['Email', lead.email],
                 ['Date', lead.created_at ? formatDate(lead.created_at) : '—'],
             ];
 
-            document.getElementById('detail-content').innerHTML = fields.map(([label, val]) => `
+            const rowsHtml = fields.map(([label, val]) => `
                 <div class="flex justify-between py-2 border-b border-slate-100">
                     <span class="font-bold text-slate-500">${label}</span>
-                    <span class="font-medium text-slate-800">${escHtml(val || '—')}</span>
+                    <span class="font-medium text-slate-800 text-right">${escHtml(val || '—')}</span>
                 </div>
             `).join('');
+
+            const messageHtml = lead.customer_message ? `
+                <div class="mt-4 p-4 bg-amber-50 border-2 border-amber-200 rounded-xl">
+                    <div class="text-xs font-bold text-amber-700 uppercase tracking-wider mb-1">
+                        <i class="fa-solid fa-message mr-1"></i> Customer Message
+                    </div>
+                    <p class="text-slate-800 whitespace-pre-wrap text-sm">${escHtml(lead.customer_message)}</p>
+                </div>
+            ` : '';
+
+            document.getElementById('detail-content').innerHTML = rowsHtml + messageHtml;
 
             const modal = document.getElementById('detail-modal');
             modal.classList.remove('hidden');
@@ -636,6 +677,66 @@
             const div = document.createElement('div');
             div.textContent = str;
             return div.innerHTML;
+        }
+
+        // ===================================================================
+        // EXPORT LEADS TO CSV
+        // ===================================================================
+        function exportLeads() {
+            const rows = getFilteredLeads();
+            if (rows.length === 0) {
+                alert('No leads to export with the current filters.');
+                return;
+            }
+
+            const headers = [
+                'Date','Project Type','Owner','City','ZIP','Specific Type',
+                'Budget','Timeline','Priority','Callback Day','Callback Time',
+                'Name','Phone','Email','Customer Message',
+                'Status','Payment Approved','Notes'
+            ];
+
+            const csvEscape = v => {
+                if (v === null || v === undefined) return '';
+                const s = String(v).replace(/"/g, '""');
+                return /[",\n\r]/.test(s) ? `"${s}"` : s;
+            };
+
+            const lines = [headers.join(',')];
+            rows.forEach(l => {
+                lines.push([
+                    l.created_at ? formatDate(l.created_at) : '',
+                    l.project_type || '',
+                    l.is_owner || '',
+                    l.city || '',
+                    l.zip || '',
+                    l.specific_type || '',
+                    l.budget || '',
+                    l.timeline || '',
+                    l.priority || '',
+                    l.callback_day || '',
+                    l.callback_time || '',
+                    l.name || '',
+                    l.phone || '',
+                    l.email || '',
+                    l.customer_message || '',
+                    STATUS_LABELS[l.status] || l.status || '',
+                    l.payment_approved ? 'Yes' : 'No',
+                    l.notes || ''
+                ].map(csvEscape).join(','));
+            });
+
+            const csv = '﻿' + lines.join('\r\n');
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            const stamp = new Date().toISOString().slice(0,10);
+            a.href = url;
+            a.download = `la-verified-leads-${stamp}.csv`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
         }
 
         function showSaving() {

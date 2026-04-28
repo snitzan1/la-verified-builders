@@ -50,6 +50,11 @@
             transform: translateY(-2px);
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
         }
+        .quiz-card.selected {
+            border-color: #2563eb;
+            background-color: #eff6ff;
+            box-shadow: 0 4px 12px -2px rgba(37, 99, 235, 0.25);
+        }
         .gallery-img {
             cursor: pointer;
             transition: transform 0.3s ease, box-shadow 0.3s ease;
@@ -368,6 +373,38 @@
                     <button type="button" onclick="goBack()" class="mt-6 text-slate-400 hover:text-blue-600 font-semibold w-full text-center transition"><i class="fa-solid fa-arrow-left mr-1"></i> Back</button>
                 </div>
 
+                <div id="step-callback" class="step">
+                    <h2 class="text-2xl md:text-3xl font-extrabold text-slate-900 mb-2 text-center tracking-tight">When's the best time for a callback?</h2>
+                    <p class="text-slate-500 mb-6 text-center">Pick a day and time so the verified pro can reach you when it's convenient.</p>
+
+                    <div class="max-w-md mx-auto space-y-5">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 uppercase mb-2 tracking-wider">Preferred Day</label>
+                            <div class="grid grid-cols-2 gap-2">
+                                <button type="button" class="callback-day-btn quiz-card rounded-xl py-3 px-2 text-center font-bold text-slate-800 text-sm" data-value="Today" onclick="selectCallback('day', this)">Today</button>
+                                <button type="button" class="callback-day-btn quiz-card rounded-xl py-3 px-2 text-center font-bold text-slate-800 text-sm" data-value="Tomorrow" onclick="selectCallback('day', this)">Tomorrow</button>
+                                <button type="button" class="callback-day-btn quiz-card rounded-xl py-3 px-2 text-center font-bold text-slate-800 text-sm" data-value="Within 2-3 days" onclick="selectCallback('day', this)">Within 2–3 days</button>
+                                <button type="button" class="callback-day-btn quiz-card rounded-xl py-3 px-2 text-center font-bold text-slate-800 text-sm" data-value="Anytime this week" onclick="selectCallback('day', this)">Anytime this week</button>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 uppercase mb-2 tracking-wider">Preferred Time</label>
+                            <div class="grid grid-cols-2 gap-2">
+                                <button type="button" class="callback-time-btn quiz-card rounded-xl py-3 px-2 text-center font-bold text-slate-800 text-sm" data-value="Morning (8 AM – 12 PM)" onclick="selectCallback('time', this)">Morning<br><span class="text-xs font-medium text-slate-500">8 AM – 12 PM</span></button>
+                                <button type="button" class="callback-time-btn quiz-card rounded-xl py-3 px-2 text-center font-bold text-slate-800 text-sm" data-value="Afternoon (12 – 5 PM)" onclick="selectCallback('time', this)">Afternoon<br><span class="text-xs font-medium text-slate-500">12 – 5 PM</span></button>
+                                <button type="button" class="callback-time-btn quiz-card rounded-xl py-3 px-2 text-center font-bold text-slate-800 text-sm" data-value="Evening (5 – 8 PM)" onclick="selectCallback('time', this)">Evening<br><span class="text-xs font-medium text-slate-500">5 – 8 PM</span></button>
+                                <button type="button" class="callback-time-btn quiz-card rounded-xl py-3 px-2 text-center font-bold text-slate-800 text-sm" data-value="Anytime" onclick="selectCallback('time', this)">Anytime</button>
+                            </div>
+                        </div>
+
+                        <button type="button" id="callback-continue-btn" onclick="handleCallbackContinue()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold text-xl py-4 rounded-2xl shadow-lg transition duration-200 mt-2 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                            Continue <i class="fa-solid fa-arrow-right ml-2"></i>
+                        </button>
+                    </div>
+                    <button type="button" onclick="goBack()" class="mt-6 text-slate-400 hover:text-blue-600 font-semibold w-full text-center transition"><i class="fa-solid fa-arrow-left mr-1"></i> Back</button>
+                </div>
+
                 <div id="step-8" class="step">
                     <div class="text-center mb-6">
                         <div class="inline-flex items-center justify-center w-16 h-16 bg-green-100 text-green-600 rounded-full mb-3 shadow-sm">
@@ -392,6 +429,10 @@
                                 <input type="email" id="email" required placeholder="john@email.com" class="w-full border-2 border-slate-200 rounded-xl px-4 py-3 focus:border-blue-600 focus:outline-none bg-slate-50 font-medium">
                             </div>
                         </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Anything else? <span class="font-medium text-slate-400 normal-case lowercase">(optional)</span></label>
+                            <textarea id="customer_message" rows="3" placeholder="Tell us anything else about your project, special requirements, or questions..." class="w-full border-2 border-slate-200 rounded-xl px-4 py-3 focus:border-blue-600 focus:outline-none bg-slate-50 font-medium resize-none"></textarea>
+                        </div>
 
                         <button type="submit" id="submit-btn" class="w-full bg-orange-500 hover:bg-orange-600 text-white font-extrabold text-xl py-4 rounded-xl shadow-lg transition duration-200 mt-4">
                             Get My Free Estimate
@@ -411,6 +452,8 @@
                 <input type="hidden" id="ans_budget" value="">
                 <input type="hidden" id="ans_timeline" value="">
                 <input type="hidden" id="ans_priority" value="">
+                <input type="hidden" id="ans_callback_day" value="">
+                <input type="hidden" id="ans_callback_time" value="">
 
             </form>
 
@@ -670,14 +713,14 @@
             '90266','90277','90503','90293','90094'
         ]);
 
-        const flowADU = ['step-1', 'step-2', 'step-3', 'step-4-adu', 'step-5-adu', 'step-6', 'step-7-adu', 'step-8'];
-        const flowKitchen = ['step-1', 'step-2', 'step-3', 'step-4-kit', 'step-5-kit', 'step-6', 'step-7-kit', 'step-8'];
+        const flowADU = ['step-1', 'step-2', 'step-3', 'step-4-adu', 'step-5-adu', 'step-6', 'step-7-adu', 'step-callback', 'step-8'];
+        const flowKitchen = ['step-1', 'step-2', 'step-3', 'step-4-kit', 'step-5-kit', 'step-6', 'step-7-kit', 'step-callback', 'step-8'];
 
         flowPath = flowADU;
         updateProgress();
 
         function updateProgress() {
-            const total = 8;
+            const total = flowPath.length;
             const pct = ((currentStepIndex + 1) / total) * 100;
             document.getElementById('progress-bar').style.width = pct + '%';
             document.getElementById('progress-text').innerText = 'Step ' + (currentStepIndex + 1) + ' of ' + total;
@@ -717,6 +760,30 @@
                     value: value,
                     step: currentStepIndex + 1
                 });
+            }
+
+            moveToNextStep();
+        }
+
+        function selectCallback(group, btn) {
+            const groupClass = group === 'day' ? 'callback-day-btn' : 'callback-time-btn';
+            document.querySelectorAll('.' + groupClass).forEach(b => b.classList.remove('selected'));
+            btn.classList.add('selected');
+            document.getElementById('ans_callback_' + group).value = btn.dataset.value;
+
+            const dayPicked = document.getElementById('ans_callback_day').value;
+            const timePicked = document.getElementById('ans_callback_time').value;
+            const continueBtn = document.getElementById('callback-continue-btn');
+            continueBtn.disabled = !(dayPicked && timePicked);
+        }
+
+        function handleCallbackContinue() {
+            const day = document.getElementById('ans_callback_day').value;
+            const time = document.getElementById('ans_callback_time').value;
+            if (!day || !time) return;
+
+            if (typeof fbq === 'function') {
+                fbq('trackCustom', 'CallbackTimePicked', { day: day, time: time });
             }
 
             moveToNextStep();
@@ -811,9 +878,12 @@
                 budget: document.getElementById('ans_budget').value,
                 timeline: document.getElementById('ans_timeline').value,
                 priority: document.getElementById('ans_priority').value,
+                callback_day: document.getElementById('ans_callback_day').value,
+                callback_time: document.getElementById('ans_callback_time').value,
                 name: document.getElementById('fname').value,
                 phone: document.getElementById('phone').value,
                 email: document.getElementById('email').value,
+                customer_message: document.getElementById('customer_message').value.trim(),
                 created_at: new Date().toISOString(),
                 status: "new",
                 payment_approved: false,
